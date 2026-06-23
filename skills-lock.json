@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "spritekit": {
+      "source": "dpearson2699/swift-ios-skills",
+      "sourceType": "github",
+      "skillPath": "skills/spritekit/SKILL.md",
+      "computedHash": "2f35eb80b826cb27255130581333e431833797eabc3359958e79ec0f84de67f4"
+    }
+  }
+}
