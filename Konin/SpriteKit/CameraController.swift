@@ -28,6 +28,10 @@ final class CameraController {
     // Multiple overlapping sine waves → organic, non-repeating vibration.
     private var rumbleTime: Double = 0.0
     
+    // MARK: - Rumble Boost
+    private var rumbleBoost: CGFloat = 1.0
+    private var rumbleBoostDecay: CGFloat = 1.5
+    
     private struct RumbleLayer {
         let frequency: Double   // Hz
         let ampY: CGFloat       // vertical displacement in points
@@ -74,6 +78,12 @@ final class CameraController {
         shakeIntensity = max(shakeIntensity, intensity)
     }
     
+    /// Temporarily boost the train cockpit's continuous rumble speed and amplitude
+    func boostRumble(multiplier: CGFloat, decaySpeed: CGFloat = 1.5) {
+        rumbleBoost = max(rumbleBoost, multiplier)
+        rumbleBoostDecay = decaySpeed
+    }
+    
     func update(deltaTime: TimeInterval) {
         guard let train = scene?.trainController else { return }
         let dt = CGFloat(deltaTime)
@@ -105,6 +115,14 @@ final class CameraController {
             jitterX += cos(phaseX) * layer.ampX
         }
         
+        // Decays back to 1.0
+        if rumbleBoost > 1.0 {
+            rumbleBoost -= rumbleBoostDecay * dt
+            if rumbleBoost < 1.0 {
+                rumbleBoost = 1.0
+            }
+        }
+        
         // 4. Impact shake — decays over time, added on top of rumble.
         var shakeX: CGFloat = 0.0
         var shakeY: CGFloat = 0.0
@@ -120,8 +138,8 @@ final class CameraController {
         
         // 6. Write combined offset (rumble, impact shake, and duck) to cockpitNode only
         cockpitNode.position = CGPoint(
-            x: jitterX * speedNorm + shakeX,
-            y: jitterY * speedNorm + shakeY + duckOffset
+            x: jitterX * speedNorm * rumbleBoost + shakeX,
+            y: jitterY * speedNorm * rumbleBoost + shakeY + duckOffset
         )
     }
 }

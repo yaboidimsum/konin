@@ -149,6 +149,7 @@ final class HazardManager {
         scene.cameraController.shake(duration: 0.7, intensity: 18)
         GameDirector.shared.updateCoal(-30.0)
         SynthAudioEngine.shared.playExplosion()
+        SynthAudioEngine.shared.playDamage()
         scene.triggerFlash(color: SKColor(red: 0.9, green: 0.1, blue: 0.1, alpha: 0.7))
     }
     

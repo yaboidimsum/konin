@@ -21,6 +21,10 @@ final class TrainController {
     var leanAngle: CGFloat = 0.0
     private var leanVelocity: CGFloat = 0.0
     
+    // Spam prevention cooldown
+    private var switchCooldownTimer: TimeInterval = 0.0
+    private let switchCooldownDuration: TimeInterval = 0.35 // delay in seconds (350ms)
+    
     // Train physics
     var speed: Double = 0.0
     var targetSpeed: Double = 0.0
@@ -49,6 +53,11 @@ final class TrainController {
     func update(deltaTime: TimeInterval, chapter: Chapter) {
         guard let scene = scene else { return }
         let dt = CGFloat(deltaTime)
+        
+        // Update track switch cooldown timer
+        if switchCooldownTimer > 0.0 {
+            switchCooldownTimer -= deltaTime
+        }
         
         // 1. Target speed
         if GameDirector.shared.coalPercentage <= 0 {
@@ -84,9 +93,16 @@ final class TrainController {
             GameDirector.shared.distanceTravelled = distanceTravelled
             SynthAudioEngine.shared.setSpeedRatio(Float(speed / 35.0))
             
-            if distanceTravelled >= chapter.targetDistance && chapter.targetDistance > 0 {
+            if distanceTravelled >= chapter.targetDistance && chapter.targetDistance > 0 && !hasTriggeredEnding {
                 speed = 0; targetSpeed = 0
-                DispatchQueue.main.async { GameDirector.shared.completeChapter(chapter) }
+                hasTriggeredEnding = true
+                DispatchQueue.main.async {
+                    if chapter == .konin {
+                        GameDirector.shared.completeChapter(chapter)
+                    } else {
+                        self.scene?.triggerChapterSuccessFade(chapter: chapter)
+                    }
+                }
             }
         } else if chapter == .zolkiew && speed <= 0.1 && !hasTriggeredEnding {
             hasTriggeredEnding = true
@@ -119,29 +135,32 @@ final class TrainController {
     
     /// Shift one lane to the left (towards lane 0)
     func shiftLaneLeft() {
-        guard speed > 5.0 else { return }
+        guard speed > 5.0 && switchCooldownTimer <= 0.0 else { return }
         let newLane = max(0, targetLane - 1)
         if newLane != targetLane {
             targetLane = newLane
+            switchCooldownTimer = switchCooldownDuration
             SynthAudioEngine.shared.playRailSwitch()
         }
     }
     
     /// Shift one lane to the right (towards lane 2)
     func shiftLaneRight() {
-        guard speed > 5.0 else { return }
+        guard speed > 5.0 && switchCooldownTimer <= 0.0 else { return }
         let newLane = min(2, targetLane + 1)
         if newLane != targetLane {
             targetLane = newLane
+            switchCooldownTimer = switchCooldownDuration
             SynthAudioEngine.shared.playRailSwitch()
         }
     }
     
     /// Instantly target the center lane (1) from any position
     func returnToCenter() {
-        guard speed > 5.0 else { return }
+        guard speed > 5.0 && switchCooldownTimer <= 0.0 else { return }
         if targetLane != 1 {
             targetLane = 1
+            switchCooldownTimer = switchCooldownDuration
             SynthAudioEngine.shared.playRailSwitch()
         }
     }
@@ -157,5 +176,6 @@ final class TrainController {
         targetSpeed = 0.0
         visualOffsetVelocity = 0.0
         leanVelocity = 0.0
+        switchCooldownTimer = 0.0
     }
 }

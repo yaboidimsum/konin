@@ -108,7 +108,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     var airRaidSpawnInterval: TimeInterval {
         switch self {
         case .krotoszyn, .kozmin: return 9999.0 // none
-        case .jarocin: return 12.0               // air raids
+        case .jarocin: return 4.5                // air raids
         case .tunnel: return 9999.0             // none
         case .konin, .zolkiew: return 9999.0    // none
         }
@@ -118,7 +118,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
         switch self {
         case .krotoszyn: return 320.0
         case .kozmin: return 480.0
-        case .jarocin: return 640.0
+        case .jarocin: return 1280.0
         case .tunnel: return 360.0
         case .konin: return 500.0
         case .zolkiew: return 0.0 // instant arrival/credits

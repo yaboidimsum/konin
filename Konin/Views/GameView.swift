@@ -96,6 +96,9 @@ struct GameView: View {
         .onDisappear {
             scene.cleanUp()
         }
+        .onChange(of: chapter) { newChapter in
+            scene.start(chapter: newChapter)
+        }
     }
     
     // Closed captions logic keyed to level progress and chapter

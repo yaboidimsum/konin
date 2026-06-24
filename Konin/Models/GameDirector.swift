@@ -76,7 +76,7 @@ final class GameDirector {
     
     func completeChapter(_ chapter: Chapter) {
         if let nextChapter = chapter.next {
-            changeState(to: .story(nextChapter))
+            changeState(to: .playing(nextChapter))
         } else {
             changeState(to: .ending)
         }

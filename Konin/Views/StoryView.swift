@@ -66,5 +66,15 @@ struct StoryView: View {
             }
             .padding()
         }
+        .onAppear {
+            // Automatically advance to the next chapter after 6.5 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 6.5) {
+                if director.currentState == .story(chapter) {
+                    withAnimation {
+                        director.advanceFromStory(chapter)
+                    }
+                }
+            }
+        }
     }
 }
