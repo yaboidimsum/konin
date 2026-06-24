@@ -17,6 +17,7 @@ final class SynthAudioEngine: @unchecked Sendable {
     private var damagePlayer: AVAudioPlayer?        // damage.mp3
     private var explosion1Player: AVAudioPlayer?    // dragon-studio-loud-explosion-425457.mp3
     private var explosion2Player: AVAudioPlayer?    // universfield-epic-cinematic-explosion-454857.mp3
+    private var honkPlayer: AVAudioPlayer?          // YTMP3GG_YouTube_train-sound-effect_Media_SXWldxHxKgU_006_128k.mp3
     
     // MARK: - State
     private var isAmbienceActive: Bool = false
@@ -65,6 +66,7 @@ final class SynthAudioEngine: @unchecked Sendable {
         loadPlayer(resource: "damage", store: &damagePlayer, initialVolume: 0.0)
         loadPlayer(resource: "dragon-studio-loud-explosion-425457", store: &explosion1Player, initialVolume: 0.0)
         loadPlayer(resource: "universfield-epic-cinematic-explosion-454857", store: &explosion2Player, initialVolume: 0.0)
+        loadPlayer(resource: "YTMP3GG_YouTube_train-sound-effect_Media_SXWldxHxKgU_006_128k", store: &honkPlayer, initialVolume: 0.0)
     }
     
     // MARK: - Audio Session Configuration
@@ -137,6 +139,8 @@ final class SynthAudioEngine: @unchecked Sendable {
             self.explosion1Player?.volume = 0.0
             self.explosion2Player?.stop()
             self.explosion2Player?.volume = 0.0
+            self.honkPlayer?.stop()
+            self.honkPlayer?.volume = 0.0
         }
     }
     
@@ -231,6 +235,19 @@ final class SynthAudioEngine: @unchecked Sendable {
             let ok = p.play()
             if !ok {
                 print("[Audio] explosion.play() returned false")
+            }
+        }
+    }
+    
+    func playHonk() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let player = self.honkPlayer else { return }
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            let ok = player.play()
+            if !ok {
+                print("[Audio] honk.play() returned false")
             }
         }
     }

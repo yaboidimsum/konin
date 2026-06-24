@@ -87,6 +87,7 @@ final class GameScene: SKScene {
     // Horizon Luftwaffe & AA visuals (Jarocin chapter only)
     private var horizonPlaneTimer: TimeInterval = 0.0
     private var horizonAATimer: TimeInterval = 0.0
+    private var smokeSpawnTimer: TimeInterval = 0.0
     private var nextAATime: TimeInterval = 1.0
     private var nextPlaneTime: TimeInterval = 4.0
     
@@ -283,17 +284,17 @@ final class GameScene: SKScene {
         addChild(node)
         citySilhouette = node
         
-        let fullTexture = SKTexture(imageNamed: "background-1")
-        let textureSize = fullTexture.size()
+//        let fullTexture = SKTexture(imageNamed: "background-1")
+//        let textureSize = fullTexture.size()
         let cropRect = CGRect(x: 0.0, y: 0.38, width: 1.0, height: 0.30)
-        let bgTexture = SKTexture(rect: cropRect, in: fullTexture)
+//        let bgTexture = SKTexture(rect: cropRect, in: fullTexture)
         let targetWidth = size.width * 1.5
-        let scale = targetWidth / textureSize.width
-        let targetHeight = (textureSize.height * 0.30) * scale
-        let bgSprite = SKSpriteNode(texture: bgTexture, size: CGSize(width: targetWidth, height: targetHeight))
-        bgSprite.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        bgSprite.position = .zero
-        node.addChild(bgSprite)
+//        let scale = targetWidth / textureSize.width
+//        let targetHeight = (textureSize.height * 0.30) * scale
+//        let bgSprite = SKSpriteNode(texture: bgTexture, size: CGSize(width: targetWidth, height: targetHeight))
+//        bgSprite.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+//        bgSprite.position = .zero
+//        node.addChild(bgSprite)
     }
     
     // MARK: - Procedural City Skylines
@@ -307,6 +308,15 @@ final class GameScene: SKScene {
         addChild(container)
         citySkylinesNode = container
         
+        rebuildCitySkylines(for: .krotoszyn) // Default population
+    }
+    
+    private func rebuildCitySkylines(for chapter: Chapter) {
+        guard let container = citySkylinesNode else { return }
+        container.removeAllChildren()
+        
+        let isWartime = (chapter == .jarocin)
+        
         // Far layer — small, muted buildings
         addSkylineLayer(
             to: container,
@@ -315,9 +325,10 @@ final class GameScene: SKScene {
             spanWidth: size.width * 1.6,
             minH: 18, maxH: 55,
             minW: 14, maxW: 38,
-            color: SKColor(white: 0.20, alpha: 0.55),
+            color: isWartime ? SKColor(red: 0.14, green: 0.13, blue: 0.12, alpha: 0.75) : SKColor(white: 0.20, alpha: 0.55),
             yOffset: 0,
-            zPos: 0.0
+            zPos: 0.0,
+            isWartime: isWartime
         )
         
         // Near layer — taller, slightly brighter, more left-right spread
@@ -328,9 +339,10 @@ final class GameScene: SKScene {
             spanWidth: size.width * 1.4,
             minH: 30, maxH: 80,
             minW: 18, maxW: 52,
-            color: SKColor(white: 0.14, alpha: 0.70),
+            color: isWartime ? SKColor(red: 0.10, green: 0.09, blue: 0.08, alpha: 0.90) : SKColor(white: 0.14, alpha: 0.70),
             yOffset: 0,
-            zPos: 0.01
+            zPos: 0.01,
+            isWartime: isWartime
         )
     }
     
@@ -343,7 +355,8 @@ final class GameScene: SKScene {
         minW: CGFloat, maxW: CGFloat,
         color: SKColor,
         yOffset: CGFloat,
-        zPos: CGFloat
+        zPos: CGFloat,
+        isWartime: Bool
     ) {
         // Deterministic pseudo-random using seed
         var rng = SeededRNG(seed: seed)
@@ -354,23 +367,73 @@ final class GameScene: SKScene {
             let h = minH + rng.nextFloat() * (maxH - minH)
             let w = minW + rng.nextFloat() * (maxW - minW)
             
-            let building = SKSpriteNode(color: color, size: CGSize(width: w, height: h))
-            building.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+            let building = SKNode()
             building.position = CGPoint(x: x, y: yOffset)
             building.zPosition = zPos
             parent.addChild(building)
             
-            // Windows: a few bright dots on taller buildings
-            if h > 35 {
-                let numWindows = Int(rng.nextFloat() * 4) + 1
-                for _ in 0..<numWindows {
-                    let wx = (rng.nextFloat() - 0.5) * w * 0.6
-                    let wy = rng.nextFloat() * h * 0.6 + h * 0.1
-                    let dot = SKSpriteNode(color: SKColor(red: 1.0, green: 0.9, blue: 0.5, alpha: 0.6),
-                                          size: CGSize(width: 3, height: 3))
-                    dot.position = CGPoint(x: wx, y: wy)
-                    dot.zPosition = 0.1
-                    building.addChild(dot)
+            if isWartime {
+                // Procedural damaged building
+                let blockCount = Int(rng.nextFloat() * 2) + 1
+                if blockCount == 1 {
+                    let mainBlock = SKSpriteNode(color: color, size: CGSize(width: w, height: h))
+                    mainBlock.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                    building.addChild(mainBlock)
+                    
+                    if rng.nextFloat() < 0.40 {
+                        let chimney = SKSpriteNode(color: color, size: CGSize(width: 4, height: CGFloat.random(in: 12...22)))
+                        chimney.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                        chimney.position = CGPoint(x: (rng.nextFloat() - 0.5) * w * 0.6, y: h)
+                        building.addChild(chimney)
+                    }
+                    
+                    if h > 35 && rng.nextFloat() < 0.50 {
+                        let holeSize = CGFloat.random(in: 6...12)
+                        let skyColor = SKColor(red: 0.28, green: 0.27, blue: 0.25, alpha: 1.0)
+                        let hole = SKSpriteNode(color: skyColor, size: CGSize(width: holeSize, height: holeSize))
+                        hole.position = CGPoint(x: (rng.nextFloat() - 0.5) * w * 0.5, y: rng.nextFloat() * h * 0.7 + h * 0.15)
+                        hole.zPosition = 0.05
+                        building.addChild(hole)
+                    }
+                } else {
+                    let w1 = w * CGFloat.random(in: 0.4...0.6)
+                    let w2 = w - w1
+                    let h1 = h
+                    let h2 = h * CGFloat.random(in: 0.3...0.6)
+                    
+                    let b1 = SKSpriteNode(color: color, size: CGSize(width: w1, height: h1))
+                    b1.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                    b1.position = CGPoint(x: -w2/2, y: 0)
+                    building.addChild(b1)
+                    
+                    let b2 = SKSpriteNode(color: color, size: CGSize(width: w2, height: h2))
+                    b2.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                    b2.position = CGPoint(x: w1/2, y: 0)
+                    building.addChild(b2)
+                    
+                    if rng.nextFloat() < 0.40 {
+                        let chimney = SKSpriteNode(color: color, size: CGSize(width: 4, height: CGFloat.random(in: 12...22)))
+                        chimney.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                        chimney.position = CGPoint(x: -w2/2, y: h1)
+                        building.addChild(chimney)
+                    }
+                }
+            } else {
+                let base = SKSpriteNode(color: color, size: CGSize(width: w, height: h))
+                base.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                building.addChild(base)
+                
+                if h > 35 {
+                    let numWindows = Int(rng.nextFloat() * 4) + 1
+                    for _ in 0..<numWindows {
+                        let wx = (rng.nextFloat() - 0.5) * w * 0.6
+                        let wy = rng.nextFloat() * h * 0.6 + h * 0.1
+                        let dot = SKSpriteNode(color: SKColor(red: 1.0, green: 0.9, blue: 0.5, alpha: 0.6),
+                                              size: CGSize(width: 3, height: 3))
+                        dot.position = CGPoint(x: wx, y: wy)
+                        dot.zPosition = 0.1
+                        building.addChild(dot)
+                    }
                 }
             }
         }
@@ -926,30 +989,60 @@ final class GameScene: SKScene {
             citySkylinesNode?.alpha = 0.0
             citySkylinesNode?.setScale(0.70)
             environmentNode?.isHidden = false
+            rebuildCitySkylines(for: chapter)
         }
+        
+        updateWartimeSky(isWartime: (chapter == .jarocin))
+        
+        // Reset texture to nil so fallback to solid colors works for other chapters
+        skyNode?.texture = nil
         
         switch chapter {
         case .krotoszyn:
-            // Hopeful Sunset
-            skyNode.color = SKColor(red: 0.95, green: 0.6, blue: 0.25, alpha: 1.0)
+            // Hopeful Sunset (Gold bottom to Rose/Violet top)
+            let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
+            let topColor = SKColor(red: 0.72, green: 0.30, blue: 0.42, alpha: 1.0)
+            let bottomColor = SKColor(red: 1.0, green: 0.78, blue: 0.27, alpha: 1.0)
+            if let gradTexture = createSkyGradientTexture(size: skySize, topColor: topColor, bottomColor: bottomColor) {
+                skyNode.texture = gradTexture
+                skyNode.color = .white
+            } else {
+                skyNode.color = bottomColor
+            }
             groundNode.color = SKColor(red: 0.28, green: 0.35, blue: 0.22, alpha: 1.0)
             horizonLine.color = SKColor(red: 0.4, green: 0.35, blue: 0.2, alpha: 1.0)
             tunnelDarkness.alpha = 0.0
             headlightBeam.alpha = 0.0
             updateRailsColor(.lightGray)
         case .kozmin:
-            // Stormy Grey
-            skyNode.color = SKColor(red: 0.35, green: 0.35, blue: 0.45, alpha: 1.0)
+            // Stormy Grey (Foggy green-grey bottom to Deep navy-charcoal top)
+            let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
+            let topColor = SKColor(red: 0.12, green: 0.14, blue: 0.17, alpha: 1.0)
+            let bottomColor = SKColor(red: 0.36, green: 0.39, blue: 0.36, alpha: 1.0)
+            if let gradTexture = createSkyGradientTexture(size: skySize, topColor: topColor, bottomColor: bottomColor) {
+                skyNode.texture = gradTexture
+                skyNode.color = .white
+            } else {
+                skyNode.color = topColor
+            }
             groundNode.color = SKColor(red: 0.22, green: 0.2, blue: 0.18, alpha: 1.0)
             horizonLine.color = SKColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
             tunnelDarkness.alpha = 0.0
             headlightBeam.alpha = 0.0
             updateRailsColor(.gray)
         case .jarocin:
-            // Fiery Red/Orange
-            skyNode.color = SKColor(red: 0.55, green: 0.15, blue: 0.1, alpha: 1.0)
-            groundNode.color = SKColor(red: 0.18, green: 0.12, blue: 0.1, alpha: 1.0)
-            horizonLine.color = SKColor(red: 0.15, green: 0.1, blue: 0.08, alpha: 1.0)
+            // wartime desaturated gradient fading from orange (bottom) to grey (top) (background-2 reference)
+            let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
+            let topColor = SKColor(red: 0.28, green: 0.27, blue: 0.25, alpha: 1.0)
+            let bottomColor = SKColor(red: 0.85, green: 0.35, blue: 0.15, alpha: 1.0)
+            if let gradTexture = createSkyGradientTexture(size: skySize, topColor: topColor, bottomColor: bottomColor) {
+                skyNode.texture = gradTexture
+                skyNode.color = .white
+            } else {
+                skyNode.color = topColor
+            }
+            groundNode.color = SKColor(red: 0.50, green: 0.48, blue: 0.46, alpha: 1.0)
+            horizonLine.color = SKColor(red: 0.18, green: 0.17, blue: 0.16, alpha: 1.0)
             tunnelDarkness.alpha = 0.0
             headlightBeam.alpha = 0.0
             updateRailsColor(.gray)
@@ -962,8 +1055,16 @@ final class GameScene: SKScene {
             headlightBeam.alpha = 0.25
             updateRailsColor(.darkGray)
         case .konin:
-            // Dreamy pastel blue/violet
-            skyNode.color = SKColor(red: 0.68, green: 0.72, blue: 0.92, alpha: 1.0)
+            // Dreamy sunrise (Peach bottom to Pastel Blue top)
+            let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
+            let topColor = SKColor(red: 0.65, green: 0.76, blue: 0.97, alpha: 1.0)
+            let bottomColor = SKColor(red: 0.97, green: 0.79, blue: 0.65, alpha: 1.0)
+            if let gradTexture = createSkyGradientTexture(size: skySize, topColor: topColor, bottomColor: bottomColor) {
+                skyNode.texture = gradTexture
+                skyNode.color = .white
+            } else {
+                skyNode.color = topColor
+            }
             groundNode.color = SKColor(red: 0.45, green: 0.65, blue: 0.45, alpha: 1.0)
             horizonLine.color = SKColor(red: 0.6, green: 0.7, blue: 0.7, alpha: 1.0)
             tunnelDarkness.alpha = 0.0
@@ -1160,7 +1261,7 @@ final class GameScene: SKScene {
         
         // 2. Refresh sleeper coordinates to simulate forward velocity
         updateSleepers(deltaTime: deltaTime)
-        environmentNode?.update(deltaTime: deltaTime, speed: trainController.speed, visualOffset: trainController.visualOffset)
+        environmentNode?.update(deltaTime: deltaTime, speed: trainController.speed, visualOffset: trainController.visualOffset, chapter: activeChapter)
         updateCityApproach(deltaTime: deltaTime)
         
         // Update horizon Luftwaffe & AA flak visuals during Jarocin air raids
@@ -1560,6 +1661,39 @@ final class GameScene: SKScene {
         }
     }
 
+    private func createSkyGradientTexture(size: CGSize, topColor: SKColor, bottomColor: SKColor) -> SKTexture? {
+        let width = Int(size.width)
+        let height = Int(size.height)
+        guard let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            return nil
+        }
+        
+        context.clear(CGRect(origin: .zero, size: size))
+        
+        let colors = [
+            bottomColor.cgColor,
+            topColor.cgColor
+        ] as CFArray
+        
+        let locations: [CGFloat] = [0.0, 1.0]
+        
+        guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                        colors: colors, locations: locations) else {
+            return nil
+        }
+        
+        let startPoint = CGPoint(x: size.width / 2.0, y: 0.0)
+        let endPoint = CGPoint(x: size.width / 2.0, y: size.height)
+        
+        context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: .drawsAfterEndLocation)
+        
+        guard let cgImage = context.makeImage() else { return nil }
+        return SKTexture(cgImage: cgImage)
+    }
+
     private func createVignetteTexture(size: CGSize) -> SKTexture? {
         let width = Int(size.width)
         let height = Int(size.height)
@@ -1574,10 +1708,12 @@ final class GameScene: SKScene {
         
         let colors = [
             CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0),
-            CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.85)
+            CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0),
+            CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.55),
+            CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.98)
         ] as CFArray
         
-        let locations: [CGFloat] = [0.0, 1.0]
+        let locations: [CGFloat] = [0.0, 0.35, 0.75, 1.0]
         
         guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
                                         colors: colors, locations: locations) else {
@@ -1613,6 +1749,9 @@ final class GameScene: SKScene {
             nextAATime = Double.random(in: 0.08...0.20) // extremely intense rate of AA fire
             triggerAAFire()
         }
+        
+        // 3. Spawning rising smoke plumes from the background city
+        updateSmokePlumes(deltaTime: deltaTime)
     }
     
     private func spawnSubtleHorizonPlane() {
@@ -1713,6 +1852,80 @@ final class GameScene: SKScene {
         let remove = SKAction.removeFromParent()
         
         flak.run(SKAction.sequence([group, remove]))
+    }
+    
+    private func updateWartimeSky(isWartime: Bool) {
+        if isWartime {
+            if childNode(withName: "wartimeHorizonGlow") == nil {
+                // Warm copper glow at the horizon
+                let glow = SKSpriteNode(color: SKColor(red: 0.85, green: 0.35, blue: 0.15, alpha: 0.45),
+                                        size: CGSize(width: size.width * 2, height: 45))
+                glow.name = "wartimeHorizonGlow"
+                glow.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                glow.position = CGPoint(x: size.width / 2, y: horizonY)
+                glow.zPosition = 0.02
+                addChild(glow)
+            }
+            
+            if childNode(withName: "wartimeClouds") == nil {
+                let clouds = SKNode()
+                clouds.name = "wartimeClouds"
+                addChild(clouds)
+                
+                let cloudColors = [
+                    SKColor(red: 0.20, green: 0.19, blue: 0.18, alpha: 0.5),
+                    SKColor(red: 0.35, green: 0.33, blue: 0.31, alpha: 0.3),
+                    SKColor(red: 0.24, green: 0.23, blue: 0.22, alpha: 0.4)
+                ]
+                
+                let cloudHeights: [CGFloat] = [12, 18, 15]
+                let cloudYOffsets: [CGFloat] = [15, 60, 110]
+                
+                for i in 0..<3 {
+                    let strip = SKSpriteNode(color: cloudColors[i], size: CGSize(width: size.width * 2.5, height: cloudHeights[i]))
+                    strip.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                    strip.position = CGPoint(x: size.width / 2, y: horizonY + cloudYOffsets[i])
+                    strip.zPosition = 0.01
+                    clouds.addChild(strip)
+                }
+            }
+        } else {
+            childNode(withName: "wartimeHorizonGlow")?.removeFromParent()
+            childNode(withName: "wartimeClouds")?.removeFromParent()
+        }
+    }
+    
+    private func updateSmokePlumes(deltaTime: TimeInterval) {
+        smokeSpawnTimer += deltaTime
+        if smokeSpawnTimer >= 0.18 {
+            smokeSpawnTimer = 0.0
+            
+            let sources: [CGFloat] = [
+                size.width * 0.2,
+                size.width * 0.32,
+                size.width * 0.48,
+                size.width * 0.65,
+                size.width * 0.82
+            ]
+            let startX = sources.randomElement()!
+            
+            let sizeVal = CGFloat.random(in: 4...8)
+            let puff = SKSpriteNode(color: SKColor(red: 0.18, green: 0.17, blue: 0.16, alpha: 0.6), size: CGSize(width: sizeVal, height: sizeVal))
+            puff.position = CGPoint(x: startX, y: horizonY + CGFloat.random(in: 0...5))
+            puff.zPosition = 0.12
+            addChild(puff)
+            
+            let duration = Double.random(in: 5.5...9.0)
+            let moveUp = SKAction.moveBy(x: -CGFloat.random(in: 35...80), y: CGFloat.random(in: 80...160), duration: duration)
+            let scaleUp = SKAction.scale(to: CGFloat.random(in: 3.5...6.0), duration: duration)
+            let fadeOut = SKAction.fadeOut(withDuration: duration)
+            let remove = SKAction.removeFromParent()
+            
+            puff.run(SKAction.sequence([
+                SKAction.group([moveUp, scaleUp, fadeOut]),
+                remove
+            ]))
+        }
     }
 }
 
