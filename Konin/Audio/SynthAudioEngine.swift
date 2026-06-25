@@ -18,6 +18,9 @@ final class SynthAudioEngine: @unchecked Sendable {
     private var explosion1Player: AVAudioPlayer?    // dragon-studio-loud-explosion-425457.mp3
     private var explosion2Player: AVAudioPlayer?    // universfield-epic-cinematic-explosion-454857.mp3
     private var honkPlayer: AVAudioPlayer?          // YTMP3GG_YouTube_train-sound-effect_Media_SXWldxHxKgU_006_128k.mp3
+    private var introJohnPlayer: AVAudioPlayer?     // Introduction-john.mp3 (intro screen background music)
+    private var introSection1Player: AVAudioPlayer? // introduction/section-1.mp3 (voiceover section 1)
+    private var introSection2Player: AVAudioPlayer? // introduction/section-2.mp3 (voiceover section 2)
     
     // MARK: - State
     private var isAmbienceActive: Bool = false
@@ -42,6 +45,7 @@ final class SynthAudioEngine: @unchecked Sendable {
     private var peacefulFade = FadeState()
     private var trainFade = FadeState()
     private var stukaFade = FadeState()
+    private var introJohnFade = FadeState()
     
     // Timer for fades (macOS and iOS compatible)
     private var fadeTimer: Timer?
@@ -67,6 +71,9 @@ final class SynthAudioEngine: @unchecked Sendable {
         loadPlayer(resource: "dragon-studio-loud-explosion-425457", store: &explosion1Player, initialVolume: 0.0)
         loadPlayer(resource: "universfield-epic-cinematic-explosion-454857", store: &explosion2Player, initialVolume: 0.0)
         loadPlayer(resource: "YTMP3GG_YouTube_train-sound-effect_Media_SXWldxHxKgU_006_128k", store: &honkPlayer, initialVolume: 0.0)
+        loadPlayer(resource: "Introduction-john", store: &introJohnPlayer, initialVolume: 0.0)
+        loadIntroSectionPlayer(resource: "section-1", store: &introSection1Player)
+        loadIntroSectionPlayer(resource: "section-2", store: &introSection2Player)
     }
     
     // MARK: - Audio Session Configuration
@@ -124,6 +131,7 @@ final class SynthAudioEngine: @unchecked Sendable {
             self.peacefulFade.isActive = false
             self.trainFade.isActive = false
             self.stukaFade.isActive = false
+            self.introJohnFade.isActive = false
             
             self.ambiencePlayer?.stop()
             self.ambiencePlayer?.volume = 0.0
@@ -141,6 +149,12 @@ final class SynthAudioEngine: @unchecked Sendable {
             self.explosion2Player?.volume = 0.0
             self.honkPlayer?.stop()
             self.honkPlayer?.volume = 0.0
+            self.introJohnPlayer?.stop()
+            self.introJohnPlayer?.volume = 0.0
+            self.introSection1Player?.stop()
+            self.introSection1Player?.volume = 0.0
+            self.introSection2Player?.stop()
+            self.introSection2Player?.volume = 0.0
         }
     }
     
@@ -155,6 +169,67 @@ final class SynthAudioEngine: @unchecked Sendable {
                 self.stopAmbience()
                 self.stopTrainSound()
             }
+        }
+    }
+    
+    func setAmbienceOnlyActive(_ active: Bool) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.isAmbienceActive = active
+            if active {
+                self.startAmbience()
+            } else {
+                self.stopAmbience()
+            }
+        }
+    }
+    
+    func startIntroJohn() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.ensurePlaying(self.introJohnPlayer)
+            self.fadeIn(player: self.introJohnPlayer, fade: &self.introJohnFade, to: 0.22, duration: 2.5)
+        }
+    }
+    
+    func stopIntroJohn(duration: TimeInterval = 2.0) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let player = self.introJohnPlayer else { return }
+            self.fadeOut(player: player, fade: &self.introJohnFade, duration: duration) {
+                player.pause()
+            }
+        }
+    }
+    
+    func playIntroSection1() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.introSection2Player?.stop()
+            if let p = self.introSection1Player {
+                p.currentTime = 0
+                p.volume = 1.0
+                p.play()
+            }
+        }
+    }
+    
+    func playIntroSection2() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.introSection1Player?.stop()
+            if let p = self.introSection2Player {
+                p.currentTime = 0
+                p.volume = 1.0
+                p.play()
+            }
+        }
+    }
+    
+    func stopIntroSections() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.introSection1Player?.stop()
+            self.introSection2Player?.stop()
         }
     }
     
@@ -369,6 +444,7 @@ final class SynthAudioEngine: @unchecked Sendable {
         processFade(player: peacefulPlayer, fade: &peacefulFade, dt: dt)
         processFade(player: trainPlayer, fade: &trainFade, dt: dt)
         processFade(player: stukaPlayer, fade: &stukaFade, dt: dt)
+        processFade(player: introJohnPlayer, fade: &introJohnFade, dt: dt)
     }
     
     private func processFade(player: AVAudioPlayer?, fade: inout FadeState, dt: TimeInterval) {
@@ -406,5 +482,38 @@ final class SynthAudioEngine: @unchecked Sendable {
         fade.elapsed = 0.0
         fade.duration = duration
         fade.completion = completion
+    }
+    
+    private func loadIntroSectionPlayer(resource: String, store: inout AVAudioPlayer?) {
+        guard let url = findAudioURL(forResource: resource, withExtension: "mp3") else {
+            print("[Audio] \(resource).mp3 not found in bundle")
+            return
+        }
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.prepareToPlay()
+            store = player
+            print("[Audio] Loaded \(resource).mp3 successfully")
+        } catch {
+            print("[Audio] Failed to load \(resource).mp3: \(error)")
+        }
+    }
+    
+    private func findAudioURL(forResource name: String, withExtension ext: String) -> URL? {
+        if let url = Bundle.main.url(forResource: name, withExtension: ext) {
+            return url
+        }
+        if let url = Bundle.main.url(forResource: name, withExtension: ext, subdirectory: "introduction") {
+            return url
+        }
+        if let url = Bundle.main.url(forResource: name, withExtension: ext, subdirectory: "Audio/introduction") {
+            return url
+        }
+        if let url = Bundle.main.url(forResource: name, withExtension: ext, subdirectory: "Konin/Audio/introduction") {
+            return url
+        }
+        return nil
     }
 }

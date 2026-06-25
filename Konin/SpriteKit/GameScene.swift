@@ -19,6 +19,7 @@ final class GameScene: SKScene {
     var activeChapter: Chapter = .krotoszyn
     private var lastUpdateTime: TimeInterval = 0.0
     private var isConfigured = false
+    var isWaitingToStart = true
     
     // Background nodes
     private var skyNode: SKSpriteNode!
@@ -143,6 +144,7 @@ final class GameScene: SKScene {
     func start(chapter: Chapter) {
         activeChapter = chapter
         lastUpdateTime = 0.0
+        isWaitingToStart = true
         
         // Reset — startup ramp, begin at center lane
         trainController.resetStartup()
@@ -1196,6 +1198,11 @@ final class GameScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         guard isConfigured else { return }
         
+        if isWaitingToStart {
+            lastUpdateTime = currentTime
+            return
+        }
+        
         if lastUpdateTime == 0.0 {
             lastUpdateTime = currentTime
             return
@@ -1379,7 +1386,7 @@ final class GameScene: SKScene {
     // Keyboard Event Handling (macOS Responder methods)
     #if os(macOS)
     override func keyDown(with event: NSEvent) {
-        guard isConfigured else { return }
+        guard isConfigured && !isWaitingToStart else { return }
         
         let keyCode = event.keyCode
         
@@ -1402,7 +1409,7 @@ final class GameScene: SKScene {
     }
     
     override func keyUp(with event: NSEvent) {
-        guard isConfigured else { return }
+        guard isConfigured && !isWaitingToStart else { return }
         
         let keyCode = event.keyCode
         
@@ -1518,7 +1525,9 @@ final class GameScene: SKScene {
             SKAction.wait(forDuration: 0.4),
             SKAction.run {
                 DispatchQueue.main.async {
-                    GameDirector.shared.changeState(to: .failed(chapter))
+                    withAnimation(.easeInOut(duration: 1.0)) {
+                        GameDirector.shared.changeState(to: .failed(chapter))
+                    }
                 }
             }
         ]))

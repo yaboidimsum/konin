@@ -16,6 +16,7 @@ struct GameView: View {
     @State private var showTitleCard = false
     @State private var titleCardOpacity = 0.0
     @State private var titleTextOpacity = 0.0
+    @State private var titleCardWorkId = 0
     
     init(chapter: Chapter) {
         self.chapter = chapter
@@ -128,10 +129,15 @@ struct GameView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                             .padding(.leading, 129)
                             .padding(.top, 197)
+                        
                     }
                     .frame(width: targetSize.width, height: targetSize.height)
                     .scaleEffect(scale)
                     .position(x: windowGeo.size.width / 2, y: windowGeo.size.height / 2)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        handleTitleCardTap()
+                    }
                 }
                 .background(Color.black)
                 .opacity(titleCardOpacity)
@@ -197,26 +203,49 @@ struct GameView: View {
     }
     
     private func triggerTitleCard() {
+        let currentId = titleCardWorkId + 1
+        titleCardWorkId = currentId
+        
         showTitleCard = true
         titleCardOpacity = 1.0
         titleTextOpacity = 0.0
         
-        // 1. Fade in the text slowly (start after 0.8s, duration 2.5s)
+        scene.isWaitingToStart = true
+        
+        // 1. Fade in the text slowly (start after 0.8s, duration 2.0s)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            withAnimation(.easeIn(duration: 2.5)) {
+            guard self.titleCardWorkId == currentId else { return }
+            withAnimation(.easeIn(duration: 2.0)) {
                 titleTextOpacity = 1.0
             }
         }
         
-        // 2. Hold the text, then fade out the entire overlay slowly (start at 4.5s, duration 3.0s)
+        // 2. Automatically start fading out to gameplay after 4.5s
         DispatchQueue.main.asyncAfter(deadline: .now() + 4.5) {
-            withAnimation(.easeInOut(duration: 3.0)) {
-                titleCardOpacity = 0.0
-            }
+            guard self.titleCardWorkId == currentId else { return }
+            startDismissTransition(currentId: currentId)
+        }
+    }
+    
+    private func handleTitleCardTap() {
+        // Tap allows skipping the remaining delay, triggering immediate dismiss transition
+        startDismissTransition(currentId: titleCardWorkId)
+    }
+    
+    private func startDismissTransition(currentId: Int) {
+        guard self.titleCardWorkId == currentId else { return }
+        self.titleCardWorkId += 1 // Invalidate any other scheduled triggers
+        
+        // Resume the SpriteKit game update loop!
+        scene.isWaitingToStart = false
+        
+        withAnimation(.easeInOut(duration: 3.0)) {
+            titleCardOpacity = 0.0
+            titleTextOpacity = 0.0
         }
         
-        // 3. Remove the overlay from hierarchy (at 7.5s)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 7.5) {
+        // After 3.0s (when fade is finished), hide it from the hierarchy
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
             showTitleCard = false
         }
     }

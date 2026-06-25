@@ -10,9 +10,19 @@ struct LoadingView: View {
     
     @State private var progress: Double = 0.0
     @State private var blinkText = false
+    @State private var isTransitioning = false
+    @State private var showSecondContinue = false
+    @State private var blinkSecondContinue = false
+    @State private var activeCaption: String? = nil
+    
+    @State private var bgScale: Double = 1.0
+    @State private var slideScale: Double = 1.15
+    @State private var slideOffset: CGFloat = 2000.0
+    @State private var slideOpacity: Double = 0.0
     
     // Cached once at view initialization
-    private let backgroundImage: Image
+    private let backgroundImage: Image // loading-menu-2
+    private let slideInImage: Image?   // loading-menu-image-1
     
     init() {
         if let url = Bundle.main.url(forResource: "loading-menu-2", withExtension: "png"),
@@ -21,17 +31,37 @@ struct LoadingView: View {
         } else {
             self.backgroundImage = Image("background-1") // Fallback
         }
+        
+        if let url = Bundle.main.url(forResource: "loading-menu-image-1", withExtension: "png"),
+           let nsImage = NSImage(contentsOf: url) {
+            self.slideInImage = Image(nsImage: nsImage)
+        } else {
+            self.slideInImage = nil
+        }
     }
     
     var body: some View {
         GeometryReader { windowGeo in
             ZStack {
-                // 1. FULL-SCREEN BACKGROUND IMAGE (Read from memory, no disk IO on redraw)
+                // 1. FULL-SCREEN BACKGROUND IMAGE (scales up subtly)
                 backgroundImage
                     .resizable()
                     .scaledToFill()
                     .frame(width: windowGeo.size.width, height: windowGeo.size.height)
+                    .scaleEffect(bgScale)
                     .clipped()
+                
+                // 2. FULL-SCREEN SLIDE-IN IMAGE (slides in full screen, zoom out over 10s)
+                if let slideImage = slideInImage {
+                    slideImage
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: windowGeo.size.width, height: windowGeo.size.height)
+                        .scaleEffect(slideScale)
+                        .clipped()
+                        .opacity(slideOpacity)
+                        .offset(x: slideOffset)
+                }
                 
                 // 2. FULL-SCREEN RADIAL GRADIENT OVERLAY
                 RadialGradient(
@@ -50,7 +80,8 @@ struct LoadingView: View {
                 let scale = min(windowGeo.size.width / targetSize.width, windowGeo.size.height / targetSize.height)
                 
                 ZStack {
-                    // Loading Text and Bar Column
+                    
+                    // Loading Text and Bar Column (fades out when transitioning)
                     VStack(spacing: 24) {
                         // Progress / Call-to-action text
                         Text(progress < 1.0 ? "\(Int(progress * 100))%" : "Click to continue")
@@ -90,6 +121,43 @@ struct LoadingView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .padding(.leading, 99)
                     .padding(.top, 654)
+                    .opacity(isTransitioning ? 0.0 : 1.0)
+                    
+                    // Closed Caption dialogue box (yellow retro style)
+                    if let caption = activeCaption {
+                        Text(caption)
+                            .font(.custom("VCR OSD Mono", size: 16))
+                            .tracking(16 * -0.04)
+                            .foregroundColor(Color(red: 1.0, green: 0.92, blue: 0.65))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.black.opacity(0.75))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                                    )
+                            )
+                            .frame(width: 826)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                            .padding(.bottom, 140)
+                            .transition(.opacity)
+                    }
+                    
+                    // Second Click to Continue Prompt (blinking, bottom center)
+                    if showSecondContinue {
+                        Text("Click to continue")
+                            .font(.custom("VCR OSD Mono", size: 24))
+                            .foregroundColor(.white)
+                            .tracking(24 * -0.06)
+                            .opacity(blinkSecondContinue ? 0.2 : 1.0)
+                            .frame(width: 1024)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                            .padding(.bottom, 60)
+                            .transition(.opacity)
+                    }
                 }
                 .frame(width: targetSize.width, height: targetSize.height)
                 .scaleEffect(scale)
@@ -98,8 +166,75 @@ struct LoadingView: View {
             .contentShape(Rectangle()) // Make the whole screen tap-interactive
             .onTapGesture {
                 if progress >= 1.0 {
-                    withAnimation(.easeInOut(duration: 0.8)) {
-                        director.changeState(to: .story(.krotoszyn))
+                    if !isTransitioning {
+                        isTransitioning = true
+                        
+                        // Start the introduction background music
+                        SynthAudioEngine.shared.startIntroJohn()
+                        
+                        withAnimation {
+                            blinkText = false
+                        }
+                        
+                        // 1. first background zoom first (duration 15.0s)
+                        withAnimation(.easeInOut(duration: 15.0)) {
+                            bgScale = 1.15
+                        }
+                        
+                        // Speak first narrative
+                        SynthAudioEngine.shared.playIntroSection1()
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            activeCaption = "John: \"My name is John Patrekov. I was born in Kraków and have driven these rails for a long time, carrying cargo and supplies. I was looking forward to my retirement, planning to live peacefully as a baker with my family. But it turns out things did not go well, because my country called.\""
+                        }
+                        
+                        // 2. after background zoom finishes (at 15.0s), slide in normal not slow
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
+                            slideOffset = windowGeo.size.width
+                            slideOpacity = 0.0
+                            slideScale = 1.15
+                            
+                            withAnimation(.easeInOut(duration: 1.0)) {
+                                slideOffset = 0.0
+                                slideOpacity = 1.0
+                            }
+                        }
+                        
+                        // 2b. after first monologue finishes (at 16.6s), speak second narrative and update closed captions
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 16.6) {
+                            SynthAudioEngine.shared.playIntroSection2()
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                activeCaption = "John: \"Now, I must board the train once again for a dangerous journey, one that could very well end my life. I only hope I will live to see my family again.\""
+                            }
+                        }
+                        
+                        // 3. after slide-in finishes (at 16.0s), second photo zoom out over 15.0s
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 16.0) {
+                            withAnimation(.easeInOut(duration: 15.0)) {
+                                slideScale = 1.0
+                            }
+                        }
+                        
+                        // Show second continue prompt after all animations complete (15.0s bg + 1.0s slide + 15.0s photo zoom out = 31.0s)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 31.0) {
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                activeCaption = nil
+                            }
+                            withAnimation(.easeIn(duration: 0.6)) {
+                                showSecondContinue = true
+                            }
+                            withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                                blinkSecondContinue = true
+                            }
+                        }
+                    } else if showSecondContinue {
+                        // Clean up speech synthesis
+                        SynthAudioEngine.shared.stopIntroSections()
+                        activeCaption = nil
+                        
+                        // Transition to Story prologue view
+                        withAnimation(.easeInOut(duration: 0.8)) {
+                            director.changeState(to: .story(.krotoszyn))
+                        }
                     }
                 }
             }
@@ -108,11 +243,23 @@ struct LoadingView: View {
         .onAppear {
             startLoadingAnimation()
         }
+        .onDisappear {
+            // Stop speech if we navigate away early
+            SynthAudioEngine.shared.stopIntroSections()
+            activeCaption = nil
+        }
     }
     
     private func startLoadingAnimation() {
         progress = 0.0
         blinkText = false
+        isTransitioning = false
+        showSecondContinue = false
+        blinkSecondContinue = false
+        bgScale = 1.0
+        slideScale = 1.15
+        slideOffset = 2000.0
+        slideOpacity = 0.0
         
         let duration: Double = 3.0 // 3 seconds loading duration
         let fps: Double = 60.0
@@ -140,3 +287,4 @@ struct LoadingView: View {
         }
     }
 }
+

@@ -37,7 +37,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var storyHeader: String {
         switch self {
-        case .krotoszyn: return "September 1, 1939"
+        case .krotoszyn: return "September 1st, 1939"
         case .kozmin: return "Chapter 2 — Koźmin"
         case .jarocin: return "Chapter 3 — Jarocin"
         case .tunnel: return "The Tunnel"
