@@ -35,6 +35,8 @@ final class GameDirector {
             audio.setAmbienceActive(false)
             audio.setChapter(.krotoszyn)
             audio.setSpeedRatio(1.0)
+        case .loading:
+            break
         case .story(let chapter):
             activeChapter = chapter
             audio.setAmbienceActive(false)
@@ -63,7 +65,7 @@ final class GameDirector {
     }
     
     func startGame() {
-        changeState(to: .story(.krotoszyn))
+        changeState(to: .loading)
     }
     
     func advanceFromStory(_ chapter: Chapter) {

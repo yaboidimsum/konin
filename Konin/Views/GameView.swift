@@ -13,6 +13,10 @@ struct GameView: View {
     // Store scene once in State as per SpriteKit best practice
     @State private var scene: GameScene
     
+    @State private var showTitleCard = false
+    @State private var titleCardOpacity = 0.0
+    @State private var titleTextOpacity = 0.0
+    
     init(chapter: Chapter) {
         self.chapter = chapter
         
@@ -70,7 +74,8 @@ struct GameView: View {
                 // Closed Caption dialogue box (yellow retro style)
                 if let caption = activeCaptionText {
                     Text(caption)
-                        .font(.system(size: 15, weight: .semibold, design: .serif))
+                        .font(.custom("VCR OSD Mono", size: 16))
+                        .tracking(16 * -0.04)
                         .foregroundColor(Color(red: 1.0, green: 0.92, blue: 0.65))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
@@ -89,15 +94,60 @@ struct GameView: View {
             }
             .padding(.bottom, 220) // Positioned directly above the dashboard HUD
             .allowsHitTesting(false) // Let mouse clicks go to SpriteKit scene
+            
+            // TITLE CARD OVERLAY
+            if showTitleCard {
+                GeometryReader { windowGeo in
+                    let targetSize = CGSize(width: 1024, height: 768)
+                    let scale = min(windowGeo.size.width / targetSize.width, windowGeo.size.height / targetSize.height)
+                    
+                    ZStack {
+                        // 1. BLACK BACKGROUND
+                        Color.black
+                            .frame(width: targetSize.width, height: targetSize.height)
+                        
+                        // 2. RADIAL GRADIENT OVERLAY
+                        RadialGradient(
+                            gradient: Gradient(colors: [
+                                Color(red: 0.2, green: 0.17, blue: 0.17, opacity: 0.0),
+                                Color(red: 0.0, green: 0.04, blue: 0.03, opacity: 1.0)
+                            ]),
+                            center: UnitPoint(x: 0.46, y: 0.50),
+                            startRadius: 0,
+                            endRadius: 550
+                        )
+                        .frame(width: targetSize.width, height: targetSize.height)
+                        
+                        // 3. TITLE TEXT (x: 129, y: 197)
+                        Text(chapter.actTitle)
+                            .font(.custom("VCR OSD Mono", size: 24))
+                            .foregroundColor(.white)
+                            .tracking(24 * -0.06) // letterSpacing: -0.06em
+                            .frame(width: 400, height: 23, alignment: .leading)
+                            .opacity(titleTextOpacity)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                            .padding(.leading, 129)
+                            .padding(.top, 197)
+                    }
+                    .frame(width: targetSize.width, height: targetSize.height)
+                    .scaleEffect(scale)
+                    .position(x: windowGeo.size.width / 2, y: windowGeo.size.height / 2)
+                }
+                .background(Color.black)
+                .opacity(titleCardOpacity)
+                .ignoresSafeArea()
+                .transition(.opacity)
+            }
         }
         .onAppear {
-            // Scene automatically configures on didMove(to:)
+            triggerTitleCard()
         }
         .onDisappear {
             scene.cleanUp()
         }
         .onChange(of: chapter) { newChapter in
             scene.start(chapter: newChapter)
+            triggerTitleCard()
         }
     }
     
@@ -144,5 +194,30 @@ struct GameView: View {
             }
         }
         return nil
+    }
+    
+    private func triggerTitleCard() {
+        showTitleCard = true
+        titleCardOpacity = 1.0
+        titleTextOpacity = 0.0
+        
+        // 1. Fade in the text slowly (start after 0.8s, duration 2.5s)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            withAnimation(.easeIn(duration: 2.5)) {
+                titleTextOpacity = 1.0
+            }
+        }
+        
+        // 2. Hold the text, then fade out the entire overlay slowly (start at 4.5s, duration 3.0s)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.5) {
+            withAnimation(.easeInOut(duration: 3.0)) {
+                titleCardOpacity = 0.0
+            }
+        }
+        
+        // 3. Remove the overlay from hierarchy (at 7.5s)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 7.5) {
+            showTitleCard = false
+        }
     }
 }

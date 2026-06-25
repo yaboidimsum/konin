@@ -38,7 +38,7 @@ final class TrainController {
     
     // Startup ramp
     private var startupTimer: TimeInterval = 0.0
-    private let startupDuration: TimeInterval = 3.0
+    private let startupDuration: TimeInterval = 6.5
     private var isStartingUp: Bool = true
     
     // Lane offset map: lane 0 = +160 (shift right so left track centres),

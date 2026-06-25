@@ -613,70 +613,22 @@ final class GameScene: SKScene {
         let hh = size.height / 2
         let dashH: CGFloat = 230
 
-        // ── 1. DASHBOARD BODY ─────────────────────────────────────────────────
+        // ── 1. COCKPIT TEXTURED BACKGROUND ────────────────────────────────────
+        let cockpitTexture = SKTexture(imageNamed: "train-cockpit")
+        cockpitTexture.filteringMode = .nearest
+        let cockpitBg = SKSpriteNode(texture: cockpitTexture, size: size)
+        cockpitBg.position = .zero
+        cockpitBg.zPosition = 9.9
+        cockpit.addChild(cockpitBg)
+
+        // ── 2. DASHBOARD BODY ─────────────────────────────────────────────────
         dashboardNode = SKSpriteNode(
-            color: SKColor(red: 0.09, green: 0.09, blue: 0.10, alpha: 1.0),
+            color: .clear,
             size: CGSize(width: size.width, height: dashH))
         dashboardNode.anchorPoint = CGPoint(x: 0.5, y: 0.0)
         dashboardNode.position = CGPoint(x: 0, y: -hh)
         dashboardNode.zPosition = 10.0
         cockpit.addChild(dashboardNode)
-
-        // Top bevel highlight strip
-        let bevel = SKSpriteNode(color: SKColor(white: 0.30, alpha: 1.0),
-                                  size: CGSize(width: size.width, height: 3))
-        bevel.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        bevel.position = CGPoint(x: 0, y: dashH - 1)
-        bevel.zPosition = 0.1
-        dashboardNode.addChild(bevel)
-
-        // Rivet row along the top bevel
-        for i in stride(from: -Int(hw) + 30, through: Int(hw) - 30, by: 55) {
-            let rivet = SKSpriteNode(color: SKColor(white: 0.42, alpha: 1.0),
-                                      size: CGSize(width: 6, height: 6))
-            rivet.position = CGPoint(x: CGFloat(i), y: dashH - 7)
-            rivet.zPosition = 0.2
-            dashboardNode.addChild(rivet)
-        }
-
-        // ── 2. WINDOW PILLARS ────────────────────────────────────────────────
-        let pillarColor = SKColor(red: 0.08, green: 0.08, blue: 0.09, alpha: 1.0)
-        let pillarW: CGFloat = 72
-
-        let leftPillar = SKSpriteNode(color: pillarColor,
-                                       size: CGSize(width: pillarW, height: size.height))
-        leftPillar.position = CGPoint(x: -hw + pillarW / 2, y: 0)
-        leftPillar.zPosition = 10.1
-        cockpit.addChild(leftPillar)
-
-        let lEdge = SKSpriteNode(color: SKColor(white: 0.24, alpha: 1.0),
-                                  size: CGSize(width: 2, height: size.height))
-        lEdge.position = CGPoint(x: pillarW / 2, y: 0)
-        leftPillar.addChild(lEdge)
-
-        let rightPillar = SKSpriteNode(color: pillarColor,
-                                        size: CGSize(width: pillarW, height: size.height))
-        rightPillar.position = CGPoint(x: hw - pillarW / 2, y: 0)
-        rightPillar.zPosition = 10.1
-        cockpit.addChild(rightPillar)
-
-        let rEdge = SKSpriteNode(color: SKColor(white: 0.24, alpha: 1.0),
-                                  size: CGSize(width: 2, height: size.height))
-        rEdge.position = CGPoint(x: -pillarW / 2, y: 0)
-        rightPillar.addChild(rEdge)
-
-        // Top frame
-        let topH: CGFloat = 68
-        let topFrame = SKSpriteNode(color: pillarColor,
-                                     size: CGSize(width: size.width, height: topH))
-        topFrame.position = CGPoint(x: 0, y: hh - topH / 2)
-        topFrame.zPosition = 10.1
-        cockpit.addChild(topFrame)
-
-        let topBevel = SKSpriteNode(color: SKColor(white: 0.26, alpha: 1.0),
-                                     size: CGSize(width: size.width, height: 2))
-        topBevel.position = CGPoint(x: 0, y: -topH / 2)
-        topFrame.addChild(topBevel)
 
         // ── 3. FURNACE DOOR (left of centre) ─────────────────────────────────
         let furnaceX: CGFloat = -size.width * 0.17
@@ -1442,6 +1394,8 @@ final class GameScene: SKScene {
             trainController.setDucked(true)
         case 49: // Space — stoke furnace
             coalSystem.stokeCoal()
+        case 4: // H — play train honk
+            SynthAudioEngine.shared.playHonk()
         default:
             break
         }

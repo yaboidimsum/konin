@@ -30,6 +30,9 @@ struct ContentView: View {
             case .menu:
                 MainMenuView()
                     .transition(.opacity)
+            case .loading:
+                LoadingView()
+                    .transition(.opacity)
             case .story(let chapter):
                 StoryView(chapter: chapter)
                     .id("story-\(chapter.rawValue)")

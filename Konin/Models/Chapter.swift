@@ -24,15 +24,36 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
         }
     }
     
-    var storyText: [String] {
+    var actTitle: String {
+        switch self {
+        case .krotoszyn: return "Prologue: Krotoszyn"
+        case .kozmin: return "Act 1: Koźmin"
+        case .jarocin: return "Act 2: Jarocin"
+        case .tunnel: return "The Tunnel"
+        case .konin: return "Act 3: Konin"
+        case .zolkiew: return "Final Destination — Żółkiew"
+        }
+    }
+    
+    var storyHeader: String {
+        switch self {
+        case .krotoszyn: return "September 1, 1939"
+        case .kozmin: return "Chapter 2 — Koźmin"
+        case .jarocin: return "Chapter 3 — Jarocin"
+        case .tunnel: return "The Tunnel"
+        case .konin: return "Chapter 4 — Konin"
+        case .zolkiew: return "Final Destination — Żółkiew"
+        }
+    }
+    
+    var storyParagraphs: [String] {
         switch self {
         case .krotoszyn:
             return [
-                "September 1, 1939.",
-                "The western border is breached. German forces are advancing rapidly.",
-                "My name is John. I am a railway operator.",
-                "My task is simple yet heavy: guide the evacuation train carrying civilian families away from the frontline.",
-                "Our journey starts here in Krotoszyn. We must head east, toward safety."
+                "Germany has broken through Poland's western frontier.",
+                "Blitzkrieg tactics have shattered the front lines, leaving Polish forces with little choice but to retreat",
+                "Across the country, evacuation trains depart toward the south, carrying the last hope of escape",
+                "May God protect the souls of those left behind."
             ]
         case .kozmin:
             return [
