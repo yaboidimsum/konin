@@ -36,12 +36,13 @@ struct FailedView: View {
                 
                 // 3. FAILED SCREEN CONTENT LAYOUT
                 ZStack {
-                    // Header/Date (x: 129, y: 197, width: 350, height: 23)
+                    // Header/Date (x: 129, y: 197)
                     Text("THE ENGINE STALLED")
                         .font(.custom("VCR OSD Mono", size: 24))
                         .foregroundColor(.red)
                         .tracking(24 * -0.06)
-                        .frame(width: 350, height: 23, alignment: .leading)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .padding(.leading, 129)
                         .padding(.top, 197)
@@ -52,12 +53,16 @@ struct FailedView: View {
                             .font(.custom("VCR OSD Mono", size: 24))
                             .foregroundColor(.white)
                             .tracking(24 * -0.06)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
                         
                         Text("Without fuel, the evacuation train ground to a silent halt on the tracks, stranded in the path of the advancing frontline.")
                             .font(.custom("VCR OSD Mono", size: 24))
                             .foregroundColor(Color(white: 0.7))
                             .tracking(24 * -0.06)
                             .lineSpacing(4)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(width: 734, alignment: .leading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

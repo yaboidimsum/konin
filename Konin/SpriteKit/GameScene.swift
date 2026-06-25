@@ -35,6 +35,7 @@ final class GameScene: SKScene {
     private var sleeperNodes: [SKSpriteNode] = []
     private var sleeperProgress: [Double] = []
     private let numSleepers = 7 // Fixed pool size per track
+    private var sleeperTex: SKTexture?
     
     // Middle Track (2) Rails & Sleepers
     private var middleRailNodes: [SKSpriteNode] = []
@@ -286,17 +287,20 @@ final class GameScene: SKScene {
         addChild(node)
         citySilhouette = node
         
-//        let fullTexture = SKTexture(imageNamed: "background-1")
-//        let textureSize = fullTexture.size()
-        let cropRect = CGRect(x: 0.0, y: 0.38, width: 1.0, height: 0.30)
-//        let bgTexture = SKTexture(rect: cropRect, in: fullTexture)
-        let targetWidth = size.width * 1.5
-//        let scale = targetWidth / textureSize.width
-//        let targetHeight = (textureSize.height * 0.30) * scale
-//        let bgSprite = SKSpriteNode(texture: bgTexture, size: CGSize(width: targetWidth, height: targetHeight))
-//        bgSprite.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-//        bgSprite.position = .zero
-//        node.addChild(bgSprite)
+        let fullTexture = SKTexture(imageNamed: "Horizon-1")
+        fullTexture.filteringMode = .nearest
+        let textureSize = fullTexture.size()
+        
+        // Scale down the base size to avoid covering the whole sky
+        let scale: CGFloat = 1.5
+        let spriteWidth = textureSize.width * scale
+        let spriteHeight = textureSize.height * scale
+        
+        // Render a single city silhouette in the middle of the view
+        let bgSprite = SKSpriteNode(texture: fullTexture, size: CGSize(width: spriteWidth, height: spriteHeight))
+        bgSprite.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        bgSprite.position = .zero
+        node.addChild(bgSprite)
     }
     
     // MARK: - Procedural City Skylines
@@ -523,10 +527,20 @@ final class GameScene: SKScene {
     private func setupTracksAndRails() {
 
         let centerX = size.width / 2
-        
-        // Tracks coordinates map:
-        // Rails go from horizon down to bottom of window (y = 180)
         let bottomY: CGFloat = 180.0
+        
+        let baseTrackTexture = SKTexture(imageNamed: "rail-foundation")
+        
+        // Crop the textured metallic rail from rail-foundation.png (X: 40-65, Y: 150-170 in SpriteKit coords)
+        let railTexture = SKTexture(rect: CGRect(x: 40.0/436.0, y: 150.0/192.0, width: 25.0/436.0, height: 20.0/192.0), in: baseTrackTexture)
+        railTexture.filteringMode = .nearest
+        
+        // Crop the textured wood sleeper from rail-foundation.png (X: 68-367, Y: 49-136 in SpriteKit coords)
+        let sleeperTexture = SKTexture(rect: CGRect(x: 68.0/436.0, y: 49.0/192.0, width: 299.0/436.0, height: 87.0/192.0), in: baseTrackTexture)
+        sleeperTexture.filteringMode = .nearest
+        
+        // Save the sleeper texture as a property of the scene so we can use it in updateSleepers
+        self.sleeperTex = sleeperTexture
         
         // Left Track (0) Rails
         let track0_rail0_start = CGPoint(x: centerX - 202, y: bottomY)
@@ -549,10 +563,12 @@ final class GameScene: SKScene {
             (track1_rail1_start, track1_rail1_end)
         ]
         
-        // Create rail sprites
+        // Create rail sprites (width 6.0 to be clearly visible and textured)
         originalRailPositions.removeAll()
         for points in railsPoints {
-            let rail = createLineNode(from: points.0, to: points.1, color: .lightGray, width: 4.0)
+            let rail = SKSpriteNode(texture: railTexture, color: .lightGray, size: CGSize(width: 6.0, height: 1.0))
+            rail.colorBlendFactor = 0.7
+            rail.anchorPoint = CGPoint(x: 0.5, y: 0.0)
             rail.zPosition = 1.0
             addChild(rail)
             railNodes.append(rail)
@@ -562,7 +578,8 @@ final class GameScene: SKScene {
         // Create Fixed Sleepers Pool to prevent GC churn (SpriteKit skill optimization)
         for track in 0...1 {
             for i in 0..<numSleepers {
-                let sleeper = SKSpriteNode(color: SKColor(white: 0.22, alpha: 1.0), size: CGSize(width: 1, height: 1))
+                let sleeper = SKSpriteNode(texture: sleeperTexture, color: .lightGray, size: CGSize(width: 1, height: 1))
+                sleeper.colorBlendFactor = 0.7
                 sleeper.zPosition = 0.5
                 addChild(sleeper)
                 sleeperNodes.append(sleeper)
@@ -573,7 +590,7 @@ final class GameScene: SKScene {
             }
         }
         
-        // Middle Track (center lane) Rails — always visible for 3-lane play
+        // Middle Track (center lane) Rails
         let track2_rail0_start = CGPoint(x: centerX - 42, y: bottomY)
         let track2_rail0_end = CGPoint(x: centerX - 10, y: horizonY)
         
@@ -587,7 +604,9 @@ final class GameScene: SKScene {
         
         originalMiddleRailPositions.removeAll()
         for points in middleRailsPoints {
-            let rail = createLineNode(from: points.0, to: points.1, color: .lightGray, width: 4.0)
+            let rail = SKSpriteNode(texture: railTexture, color: .lightGray, size: CGSize(width: 6.0, height: 1.0))
+            rail.colorBlendFactor = 0.7
+            rail.anchorPoint = CGPoint(x: 0.5, y: 0.0)
             rail.zPosition = 1.0
             rail.alpha = 1.0   // always visible — center is now a permanent lane
             addChild(rail)
@@ -597,7 +616,8 @@ final class GameScene: SKScene {
         
         // Create Sleeper Pool for Center Track
         for i in 0..<numSleepers {
-            let sleeper = SKSpriteNode(color: SKColor(white: 0.22, alpha: 1.0), size: CGSize(width: 1, height: 1))
+            let sleeper = SKSpriteNode(texture: sleeperTexture, color: .lightGray, size: CGSize(width: 1, height: 1))
+            sleeper.colorBlendFactor = 0.7
             sleeper.zPosition = 0.5
             sleeper.alpha = 1.0   // always visible
             addChild(sleeper)
@@ -911,7 +931,7 @@ final class GameScene: SKScene {
         return line
     }
     
-    private func updateLineNode(_ line: SKSpriteNode, from: CGPoint, to: CGPoint, width: CGFloat = 4.0) {
+    private func updateLineNode(_ line: SKSpriteNode, from: CGPoint, to: CGPoint, width: CGFloat = 6.0) {
         let dx = to.x - from.x
         let dy = to.y - from.y
         let length = sqrt(dx * dx + dy * dy)
@@ -953,16 +973,9 @@ final class GameScene: SKScene {
         
         switch chapter {
         case .krotoszyn:
-            // Hopeful Sunset (Gold bottom to Rose/Violet top)
-            let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
-            let topColor = SKColor(red: 0.72, green: 0.30, blue: 0.42, alpha: 1.0)
-            let bottomColor = SKColor(red: 1.0, green: 0.78, blue: 0.27, alpha: 1.0)
-            if let gradTexture = createSkyGradientTexture(size: skySize, topColor: topColor, bottomColor: bottomColor) {
-                skyNode.texture = gradTexture
-                skyNode.color = .white
-            } else {
-                skyNode.color = bottomColor
-            }
+            // Horizon Sky color #0D4969
+            skyNode.texture = nil
+            skyNode.color = SKColor(red: 13.0/255.0, green: 73.0/255.0, blue: 105.0/255.0, alpha: 1.0)
             groundNode.color = SKColor(red: 0.28, green: 0.35, blue: 0.22, alpha: 1.0)
             horizonLine.color = SKColor(red: 0.4, green: 0.35, blue: 0.2, alpha: 1.0)
             tunnelDarkness.alpha = 0.0
@@ -1040,6 +1053,9 @@ final class GameScene: SKScene {
     
     private func updateRailsColor(_ color: SKColor) {
         for rail in railNodes {
+            rail.color = color
+        }
+        for rail in middleRailNodes {
             rail.color = color
         }
     }
@@ -1265,14 +1281,14 @@ final class GameScene: SKScene {
                 let sleeper = sleeperNodes[index]
                 let y = horizonY - (horizonY - bottomY) * CGFloat(pow(progress, 2.0))
                 
-                // Unified perspective projection
-                let scale = 0.15625 + (1.0 - 0.15625) * CGFloat(progress)
+                // Unified perspective projection matching rail.png
+                let scale = 0.33333 + (1.0 - 0.33333) * CGFloat(progress)
                 let x = centerX + (X_track + visualOffset) * scale
                 
                 sleeper.position = CGPoint(x: x, y: y)
                 
-                let w = 15.0 + (140.0 - 15.0) * CGFloat(progress)
-                let h = 2.0 + (10.0 - 2.0) * CGFloat(progress)
+                let w = 140.0 * scale
+                let h = 35.0 * scale
                 sleeper.size = CGSize(width: w, height: h)
                 
                 // Fade sleepers near the horizon, scaled by side tracks alpha
@@ -1292,13 +1308,13 @@ final class GameScene: SKScene {
             let y = horizonY - (horizonY - bottomY) * CGFloat(pow(progress, 2.0))
             
             let X_track: CGFloat = 0.0
-            let scale = 0.15625 + (1.0 - 0.15625) * CGFloat(progress)
+            let scale = 0.33333 + (1.0 - 0.33333) * CGFloat(progress)
             let x = centerX + (X_track + visualOffset) * scale
             
             sleeper.position = CGPoint(x: x, y: y)
             
-            let w = 15.0 + (140.0 - 15.0) * CGFloat(progress)
-            let h = 2.0 + (10.0 - 2.0) * CGFloat(progress)
+            let w = 140.0 * scale
+            let h = 35.0 * scale
             sleeper.size = CGSize(width: w, height: h)
             
             // Center sleepers use sideTracksAlpha complement — fades out only during Konin merge
@@ -1310,19 +1326,19 @@ final class GameScene: SKScene {
         
         // 4. Update rail lines dynamically to maintain perfect perspective
         let track0_center_bottom = centerX - 160.0 + visualOffset
-        let track0_center_horizon = centerX + (-160.0 + visualOffset) * 0.15625
-        updateLineNode(railNodes[0], from: CGPoint(x: track0_center_bottom - 42.0, y: bottomY), to: CGPoint(x: track0_center_horizon - 10.0, y: horizonY))
-        updateLineNode(railNodes[1], from: CGPoint(x: track0_center_bottom + 42.0, y: bottomY), to: CGPoint(x: track0_center_horizon + 10.0, y: horizonY))
+        let track0_center_horizon = centerX + (-160.0 + visualOffset) * 0.33333
+        updateLineNode(railNodes[0], from: CGPoint(x: track0_center_bottom - 42.0, y: bottomY), to: CGPoint(x: track0_center_horizon - 10.0, y: horizonY), width: 6.0)
+        updateLineNode(railNodes[1], from: CGPoint(x: track0_center_bottom + 42.0, y: bottomY), to: CGPoint(x: track0_center_horizon + 10.0, y: horizonY), width: 6.0)
         
         let track1_center_bottom = centerX + 160.0 + visualOffset
-        let track1_center_horizon = centerX + (160.0 + visualOffset) * 0.15625
-        updateLineNode(railNodes[2], from: CGPoint(x: track1_center_bottom - 42.0, y: bottomY), to: CGPoint(x: track1_center_horizon - 10.0, y: horizonY))
-        updateLineNode(railNodes[3], from: CGPoint(x: track1_center_bottom + 42.0, y: bottomY), to: CGPoint(x: track1_center_horizon + 10.0, y: horizonY))
+        let track1_center_horizon = centerX + (160.0 + visualOffset) * 0.33333
+        updateLineNode(railNodes[2], from: CGPoint(x: track1_center_bottom - 42.0, y: bottomY), to: CGPoint(x: track1_center_horizon - 10.0, y: horizonY), width: 6.0)
+        updateLineNode(railNodes[3], from: CGPoint(x: track1_center_bottom + 42.0, y: bottomY), to: CGPoint(x: track1_center_horizon + 10.0, y: horizonY), width: 6.0)
         
         let track2_center_bottom = centerX + visualOffset
-        let track2_center_horizon = centerX + visualOffset * 0.15625
-        updateLineNode(middleRailNodes[0], from: CGPoint(x: track2_center_bottom - 42.0, y: bottomY), to: CGPoint(x: track2_center_horizon - 10.0, y: horizonY))
-        updateLineNode(middleRailNodes[1], from: CGPoint(x: track2_center_bottom + 42.0, y: bottomY), to: CGPoint(x: track2_center_horizon + 10.0, y: horizonY))
+        let track2_center_horizon = centerX + visualOffset * 0.33333
+        updateLineNode(middleRailNodes[0], from: CGPoint(x: track2_center_bottom - 42.0, y: bottomY), to: CGPoint(x: track2_center_horizon - 10.0, y: horizonY), width: 6.0)
+        updateLineNode(middleRailNodes[1], from: CGPoint(x: track2_center_bottom + 42.0, y: bottomY), to: CGPoint(x: track2_center_horizon + 10.0, y: horizonY), width: 6.0)
         
         // 5. Update city silhouette horizontal position (subtle parallax)
         if let cityNode = citySilhouette {

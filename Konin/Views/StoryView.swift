@@ -43,12 +43,13 @@ struct StoryView: View {
                 
                 // 3. STORY LAYOUT
                 ZStack {
-                    // Header/Date (x: 129, y: 197, width: 217, height: 23)
+                    // Header/Date (x: 129, y: 197)
                     Text(chapter.storyHeader)
                         .font(.custom("VCR OSD Mono", size: 24))
                         .foregroundColor(.white)
                         .tracking(24 * -0.06) // letterSpacing: -0.06em
-                        .frame(width: 217, height: 23, alignment: .leading)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                         .opacity(lineOpacities.indices.contains(0) ? lineOpacities[0] : 0.0)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .padding(.leading, 129)
@@ -63,6 +64,8 @@ struct StoryView: View {
                                 .foregroundColor(.white)
                                 .tracking(24 * -0.06)
                                 .lineSpacing(4)
+                                .lineLimit(nil)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .opacity(lineOpacities.indices.contains(opacityIndex) ? lineOpacities[opacityIndex] : 0.0)
                         }
                     }

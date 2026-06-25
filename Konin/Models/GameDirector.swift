@@ -24,10 +24,15 @@ final class GameDirector {
     
     init() {
         audio.start()
+        audio.startMenuMusic()
     }
     
     func changeState(to newState: GameState) {
         currentState = newState
+        
+        if newState != .menu {
+            audio.stopMenuMusic(duration: 1.5)
+        }
         
         switch newState {
         case .menu:
@@ -36,6 +41,7 @@ final class GameDirector {
             audio.setAmbienceActive(false)
             audio.setChapter(.krotoszyn)
             audio.setSpeedRatio(1.0)
+            audio.startMenuMusic()
         case .loading:
             break
         case .story(let chapter):

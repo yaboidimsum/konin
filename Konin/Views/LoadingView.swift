@@ -14,11 +14,14 @@ struct LoadingView: View {
     @State private var showSecondContinue = false
     @State private var blinkSecondContinue = false
     @State private var activeCaption: String? = nil
+    @State private var isHovered = false
     
     @State private var bgScale: Double = 1.0
     @State private var slideScale: Double = 1.15
     @State private var slideOffset: CGFloat = 2000.0
     @State private var slideOpacity: Double = 0.0
+    
+    @State private var introTask: Task<Void, Never>? = nil
     
     // Cached once at view initialization
     private let backgroundImage: Image // loading-menu-2
@@ -158,6 +161,53 @@ struct LoadingView: View {
                             .padding(.bottom, 60)
                             .transition(.opacity)
                     }
+                    
+                    // Skip Button (top right, visible only during introduction cutscene playback)
+                    if isTransitioning && !showSecondContinue {
+                        Button(action: {
+                            // Stop audio monologues
+                            SynthAudioEngine.shared.stopIntroSections()
+                            activeCaption = nil
+                            introTask?.cancel()
+                            introTask = nil
+                            
+                            // Transition to Story chapter 1 view
+                            withAnimation(.easeInOut(duration: 0.8)) {
+                                director.changeState(to: .story(.krotoszyn))
+                            }
+                        }) {
+                            Text(">> SKIP")
+                                .font(.custom("VCR OSD Mono", size: 16))
+                                .tracking(16 * -0.04)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [
+                                            Color(red: 98/255, green: 109/255, blue: 95/255),
+                                            Color(red: 35/255, green: 39/255, blue: 34/255)
+                                        ]),
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                .overlay(
+                                    Rectangle()
+                                        .stroke(isHovered ? Color.white : Color(red: 40/255, green: 45/255, blue: 39/255), lineWidth: 2)
+                                )
+                                .scaleEffect(isHovered ? 1.05 : 1.0)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .onHover { hovering in
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isHovered = hovering
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                        .padding(.trailing, 60)
+                        .padding(.top, 50)
+                    }
                 }
                 .frame(width: targetSize.width, height: targetSize.height)
                 .scaleEffect(scale)
@@ -176,19 +226,27 @@ struct LoadingView: View {
                             blinkText = false
                         }
                         
-                        // 1. first background zoom first (duration 15.0s)
-                        withAnimation(.easeInOut(duration: 15.0)) {
-                            bgScale = 1.15
-                        }
-                        
-                        // Speak first narrative
-                        SynthAudioEngine.shared.playIntroSection1()
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            activeCaption = "John: \"My name is John Patrekov. I was born in Kraków and have driven these rails for a long time, carrying cargo and supplies. I was looking forward to my retirement, planning to live peacefully as a baker with my family. But it turns out things did not go well, because my country called.\""
-                        }
-                        
-                        // 2. after background zoom finishes (at 15.0s), slide in normal not slow
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
+                        // Start monologue animation sequence task
+                        introTask = Task {
+                            // 1. first background zoom first (duration 15.0s)
+                            withAnimation(.easeInOut(duration: 15.0)) {
+                                bgScale = 1.15
+                            }
+                            
+                            // Speak first narrative
+                            SynthAudioEngine.shared.playIntroSection1()
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                activeCaption = "John: \"My name is John Patrekov. I was born in Kraków and have driven these rails for a long time, carrying cargo and supplies. I was looking forward to my retirement, planning to live peacefully as a baker with my family. But it turns out things did not go well, because my country called.\""
+                            }
+                            
+                            // Wait 15.0s for bg zoom to finish
+                            do {
+                                try await Task.sleep(nanoseconds: 15_000_000_000)
+                            } catch {
+                                return // Cancelled
+                            }
+                            
+                            // 2. slide in normal not slow
                             slideOffset = windowGeo.size.width
                             slideOpacity = 0.0
                             slideScale = 1.15
@@ -197,25 +255,40 @@ struct LoadingView: View {
                                 slideOffset = 0.0
                                 slideOpacity = 1.0
                             }
-                        }
-                        
-                        // 2b. after first monologue finishes (at 16.6s), speak second narrative and update closed captions
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 16.6) {
+                            
+                            // Wait 1.0s for slide-in animation to complete (reaches +16.0s)
+                            do {
+                                try await Task.sleep(nanoseconds: 1_000_000_000)
+                            } catch {
+                                return // Cancelled
+                            }
+                            
+                            // 3. second photo zoom out over 15.0s
+                            withAnimation(.easeInOut(duration: 15.0)) {
+                                slideScale = 1.0
+                            }
+                            
+                            // Wait 0.6s to reach +16.6s
+                            do {
+                                try await Task.sleep(nanoseconds: 600_000_000)
+                            } catch {
+                                return // Cancelled
+                            }
+                            
+                            // 2b. speak second narrative and update closed captions
                             SynthAudioEngine.shared.playIntroSection2()
                             withAnimation(.easeInOut(duration: 0.5)) {
                                 activeCaption = "John: \"Now, I must board the train once again for a dangerous journey, one that could very well end my life. I only hope I will live to see my family again.\""
                             }
-                        }
-                        
-                        // 3. after slide-in finishes (at 16.0s), second photo zoom out over 15.0s
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 16.0) {
-                            withAnimation(.easeInOut(duration: 15.0)) {
-                                slideScale = 1.0
+                            
+                            // Wait 14.4s for the remaining of the 15.0s photo zoom out (reaches +31.0s)
+                            do {
+                                try await Task.sleep(nanoseconds: 14_400_000_000)
+                            } catch {
+                                return // Cancelled
                             }
-                        }
-                        
-                        // Show second continue prompt after all animations complete (15.0s bg + 1.0s slide + 15.0s photo zoom out = 31.0s)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 31.0) {
+                            
+                            // Show second continue prompt
                             withAnimation(.easeInOut(duration: 0.5)) {
                                 activeCaption = nil
                             }
@@ -230,8 +303,10 @@ struct LoadingView: View {
                         // Clean up speech synthesis
                         SynthAudioEngine.shared.stopIntroSections()
                         activeCaption = nil
+                        introTask?.cancel()
+                        introTask = nil
                         
-                        // Transition to Story prologue view
+                        // Transition to Story chapter 1 view
                         withAnimation(.easeInOut(duration: 0.8)) {
                             director.changeState(to: .story(.krotoszyn))
                         }
@@ -245,6 +320,8 @@ struct LoadingView: View {
         }
         .onDisappear {
             // Stop speech if we navigate away early
+            introTask?.cancel()
+            introTask = nil
             SynthAudioEngine.shared.stopIntroSections()
             activeCaption = nil
         }

@@ -26,11 +26,11 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var actTitle: String {
         switch self {
-        case .krotoszyn: return "Prologue: Krotoszyn"
-        case .kozmin: return "Act 1: Koźmin"
-        case .jarocin: return "Act 2: Jarocin"
+        case .krotoszyn: return "Chapter 1 — Krotoszyn"
+        case .kozmin: return "Chapter 2: Koźmin"
+        case .jarocin: return "Chapter 3: Jarocin"
         case .tunnel: return "The Tunnel"
-        case .konin: return "Act 3: Konin"
+        case .konin: return "Chapter 4: Konin"
         case .zolkiew: return "Final Destination — Żółkiew"
         }
     }

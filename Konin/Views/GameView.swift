@@ -124,7 +124,8 @@ struct GameView: View {
                             .font(.custom("VCR OSD Mono", size: 24))
                             .foregroundColor(.white)
                             .tracking(24 * -0.06) // letterSpacing: -0.06em
-                            .frame(width: 400, height: 23, alignment: .leading)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
                             .opacity(titleTextOpacity)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                             .padding(.leading, 129)

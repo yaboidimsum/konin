@@ -31,7 +31,9 @@ final class AirRaidController {
     private var attackTimer: TimeInterval = 0.0
     private var warningNode: SKLabelNode?
     private var activePlanes: [AttackingPlane] = []
-    private let warningDelay: TimeInterval = 4.0
+    private let warningDelay: TimeInterval = 18.0
+    private var jarocinTimer: TimeInterval = 0.0
+    private var hasSpawnedStukaAttack = false
     
     init(scene: GameScene) {
         self.scene = scene
@@ -47,13 +49,27 @@ final class AirRaidController {
         activePlanes.removeAll()
         SynthAudioEngine.shared.setSirenActive(false)
         activeAttack = false
+        jarocinTimer = 0.0
+        hasSpawnedStukaAttack = false
     }
     
     func update(deltaTime: TimeInterval, speed: Double, chapter: Chapter) {
         guard let scene = scene else { return }
         
         // 1. Spawning logic
-        if chapter.airRaidSpawnInterval < 1000.0 && speed > 5.0 && !activeAttack {
+        if chapter == .jarocin {
+            if speed > 5.0 && !activeAttack {
+                spawnTimer += deltaTime
+                if !hasSpawnedStukaAttack {
+                    hasSpawnedStukaAttack = true
+                    spawnTimer = 0.0
+                    startAirRaid()
+                } else if spawnTimer >= chapter.airRaidSpawnInterval {
+                    spawnTimer = 0.0
+                    startAirRaid()
+                }
+            }
+        } else if chapter.airRaidSpawnInterval < 1000.0 && speed > 5.0 && !activeAttack {
             spawnTimer += deltaTime
             if spawnTimer >= chapter.airRaidSpawnInterval {
                 spawnTimer = 0.0

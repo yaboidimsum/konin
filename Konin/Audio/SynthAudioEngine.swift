@@ -12,12 +12,15 @@ final class SynthAudioEngine: @unchecked Sendable {
     // MARK: - Audio Players
     private var ambiencePlayer: AVAudioPlayer?     // ww2-ambience.mp3 (wartime)
     private var peacefulPlayer: AVAudioPlayer?      // cod-fh.mp3 (peaceful chapters)
+    private var level3Player: AVAudioPlayer?        // level-3.mp3 (Chapter 3)
     private var trainPlayer: AVAudioPlayer?         // train-sound-effect.mp3
     private var stukaPlayer: AVAudioPlayer?         // stuka.mp3
     private var damagePlayer: AVAudioPlayer?        // damage.mp3
     private var explosion1Player: AVAudioPlayer?    // dragon-studio-loud-explosion-425457.mp3
     private var explosion2Player: AVAudioPlayer?    // universfield-epic-cinematic-explosion-454857.mp3
     private var honkPlayer: AVAudioPlayer?          // YTMP3GG_YouTube_train-sound-effect_Media_SXWldxHxKgU_006_128k.mp3
+    private var menuPlayer: AVAudioPlayer?          // Medal of Honor Allied Assault theme (menu background music)
+    private var krotoszynPlayer: AVAudioPlayer?     // Medal of Honor Allied Assault Lighting (Chapter 1 gameplay)
     private var introJohnPlayer: AVAudioPlayer?     // Introduction-john.mp3 (intro screen background music)
     private var introSection1Player: AVAudioPlayer? // introduction/section-1.mp3 (voiceover section 1)
     private var introSection2Player: AVAudioPlayer? // introduction/section-2.mp3 (voiceover section 2)
@@ -43,9 +46,12 @@ final class SynthAudioEngine: @unchecked Sendable {
     
     private var ambienceFade = FadeState()
     private var peacefulFade = FadeState()
+    private var level3Fade = FadeState()
     private var trainFade = FadeState()
     private var stukaFade = FadeState()
     private var introJohnFade = FadeState()
+    private var menuFade = FadeState()
+    private var krotoszynFade = FadeState()
     
     // Timer for fades (macOS and iOS compatible)
     private var fadeTimer: Timer?
@@ -66,11 +72,14 @@ final class SynthAudioEngine: @unchecked Sendable {
         loadPlayer(resource: "ww2-ambience", store: &ambiencePlayer, initialVolume: 0.0)
         loadPlayer(resource: "train-sound-effect", store: &trainPlayer, initialVolume: 0.0)
         loadPlayer(resource: "cod-fh", store: &peacefulPlayer, initialVolume: 0.0)
+        loadPlayer(resource: "level-3", store: &level3Player, initialVolume: 0.0)
         loadPlayer(resource: "stuka", store: &stukaPlayer, initialVolume: 0.0)
         loadPlayer(resource: "damage", store: &damagePlayer, initialVolume: 0.0)
         loadPlayer(resource: "dragon-studio-loud-explosion-425457", store: &explosion1Player, initialVolume: 0.0)
         loadPlayer(resource: "universfield-epic-cinematic-explosion-454857", store: &explosion2Player, initialVolume: 0.0)
         loadPlayer(resource: "YTMP3GG_YouTube_train-sound-effect_Media_SXWldxHxKgU_006_128k", store: &honkPlayer, initialVolume: 0.0)
+        loadPlayer(resource: "YTMP3GG_YouTube_01-Medal-of-Honor-Allied-Assault-Main-Ti_Media_-kWeJ9ywQJM_006_128k", store: &menuPlayer, initialVolume: 0.0)
+        loadPlayer(resource: "YTMP3GG_YouTube_05-Medal-of-Honor-Allied-Assault-Lightin_Media_G0t4Y-cdDNE_005_128k", store: &krotoszynPlayer, initialVolume: 0.0)
         loadPlayer(resource: "Introduction-john", store: &introJohnPlayer, initialVolume: 0.0)
         loadIntroSectionPlayer(resource: "section-1", store: &introSection1Player)
         loadIntroSectionPlayer(resource: "section-2", store: &introSection2Player)
@@ -129,14 +138,19 @@ final class SynthAudioEngine: @unchecked Sendable {
             
             self.ambienceFade.isActive = false
             self.peacefulFade.isActive = false
+            self.level3Fade.isActive = false
             self.trainFade.isActive = false
             self.stukaFade.isActive = false
             self.introJohnFade.isActive = false
+            self.menuFade.isActive = false
+            self.krotoszynFade.isActive = false
             
             self.ambiencePlayer?.stop()
             self.ambiencePlayer?.volume = 0.0
             self.peacefulPlayer?.stop()
             self.peacefulPlayer?.volume = 0.0
+            self.level3Player?.stop()
+            self.level3Player?.volume = 0.0
             self.trainPlayer?.stop()
             self.trainPlayer?.volume = 0.0
             self.stukaPlayer?.stop()
@@ -151,6 +165,10 @@ final class SynthAudioEngine: @unchecked Sendable {
             self.honkPlayer?.volume = 0.0
             self.introJohnPlayer?.stop()
             self.introJohnPlayer?.volume = 0.0
+            self.menuPlayer?.stop()
+            self.menuPlayer?.volume = 0.0
+            self.krotoszynPlayer?.stop()
+            self.krotoszynPlayer?.volume = 0.0
             self.introSection1Player?.stop()
             self.introSection1Player?.volume = 0.0
             self.introSection2Player?.stop()
@@ -201,6 +219,23 @@ final class SynthAudioEngine: @unchecked Sendable {
         }
     }
     
+    func startMenuMusic() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.ensurePlaying(self.menuPlayer)
+            self.fadeIn(player: self.menuPlayer, fade: &self.menuFade, to: 0.28, duration: 2.0)
+        }
+    }
+    
+    func stopMenuMusic(duration: TimeInterval = 1.5) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let player = self.menuPlayer else { return }
+            self.fadeOut(player: player, fade: &self.menuFade, duration: duration) {
+                player.pause()
+            }
+        }
+    }
+    
     func playIntroSection1() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -239,6 +274,13 @@ final class SynthAudioEngine: @unchecked Sendable {
             let oldChapter = self.currentChapter
             self.currentChapter = chapter
             
+            if chapter == .jarocin {
+                self.level3Player?.currentTime = 0.0
+            }
+            if chapter == .krotoszyn {
+                self.krotoszynPlayer?.currentTime = 0.0
+            }
+            
             switch chapter {
             case .krotoszyn:
                 self.ambienceTargetVolume = 0.30
@@ -260,32 +302,86 @@ final class SynthAudioEngine: @unchecked Sendable {
                 self.trainTargetVolume    = 0.20
             }
             
+            let wasJarocin = (oldChapter == .jarocin)
+            let isJarocin = (chapter == .jarocin)
+            let wasKrotoszyn = (oldChapter == .krotoszyn)
+            let isKrotoszyn = (chapter == .krotoszyn)
             let wasPeaceful = Self.isPeacefulChapter(oldChapter)
             let isPeaceful = Self.isPeacefulChapter(chapter)
             
             guard self.isAmbienceActive else { return }
             
-            if wasPeaceful != isPeaceful {
-                // Crossfade between wartime and peaceful ambient tracks
-                if isPeaceful {
-                    self.fadeOut(player: self.ambiencePlayer, fade: &self.ambienceFade, duration: 2.5) { [weak self] in
-                        self?.ambiencePlayer?.pause()
-                    }
-                    self.ensurePlaying(self.peacefulPlayer)
-                    self.fadeIn(player: self.peacefulPlayer, fade: &self.peacefulFade, to: self.ambienceTargetVolume, duration: 2.5)
-                } else {
-                    self.fadeOut(player: self.peacefulPlayer, fade: &self.peacefulFade, duration: 2.5) { [weak self] in
-                        self?.peacefulPlayer?.pause()
-                    }
-                    self.ensurePlaying(self.ambiencePlayer)
-                    self.fadeIn(player: self.ambiencePlayer, fade: &self.ambienceFade, to: self.ambienceTargetVolume, duration: 2.5)
+            if isJarocin {
+                // Fade in level-3
+                self.ensurePlaying(self.level3Player)
+                self.fadeIn(player: self.level3Player, fade: &self.level3Fade, to: self.ambienceTargetVolume, duration: 2.5)
+                
+                // Fade out others
+                self.fadeOut(player: self.ambiencePlayer, fade: &self.ambienceFade, duration: 2.5) { [weak self] in
+                    self?.ambiencePlayer?.pause()
+                }
+                self.fadeOut(player: self.peacefulPlayer, fade: &self.peacefulFade, duration: 2.5) { [weak self] in
+                    self?.peacefulPlayer?.pause()
+                }
+                self.fadeOut(player: self.menuPlayer, fade: &self.menuFade, duration: 2.5) { [weak self] in
+                    self?.menuPlayer?.pause()
+                }
+                self.fadeOut(player: self.krotoszynPlayer, fade: &self.krotoszynFade, duration: 2.5) { [weak self] in
+                    self?.krotoszynPlayer?.pause()
+                }
+            } else if isKrotoszyn {
+                // Fade in krotoszynPlayer (Medal of Honor Lighting)
+                self.ensurePlaying(self.krotoszynPlayer)
+                self.fadeIn(player: self.krotoszynPlayer, fade: &self.krotoszynFade, to: self.ambienceTargetVolume, duration: 2.5)
+                
+                // Fade out others
+                self.fadeOut(player: self.ambiencePlayer, fade: &self.ambienceFade, duration: 2.5) { [weak self] in
+                    self?.ambiencePlayer?.pause()
+                }
+                self.fadeOut(player: self.peacefulPlayer, fade: &self.peacefulFade, duration: 2.5) { [weak self] in
+                    self?.peacefulPlayer?.pause()
+                }
+                self.fadeOut(player: self.level3Player, fade: &self.level3Fade, duration: 2.5) { [weak self] in
+                    self?.level3Player?.pause()
+                }
+                self.fadeOut(player: self.menuPlayer, fade: &self.menuFade, duration: 2.5) { [weak self] in
+                    self?.menuPlayer?.pause()
+                }
+            } else if isPeaceful {
+                // Fade in peaceful
+                self.ensurePlaying(self.peacefulPlayer)
+                self.fadeIn(player: self.peacefulPlayer, fade: &self.peacefulFade, to: self.ambienceTargetVolume, duration: 2.5)
+                
+                // Fade out others
+                self.fadeOut(player: self.ambiencePlayer, fade: &self.ambienceFade, duration: 2.5) { [weak self] in
+                    self?.ambiencePlayer?.pause()
+                }
+                self.fadeOut(player: self.level3Player, fade: &self.level3Fade, duration: 2.5) { [weak self] in
+                    self?.level3Player?.pause()
+                }
+                self.fadeOut(player: self.menuPlayer, fade: &self.menuFade, duration: 2.5) { [weak self] in
+                    self?.menuPlayer?.pause()
+                }
+                self.fadeOut(player: self.krotoszynPlayer, fade: &self.krotoszynFade, duration: 2.5) { [weak self] in
+                    self?.krotoszynPlayer?.pause()
                 }
             } else {
-                // Same track type — just adjust volume
-                if isPeaceful {
-                    self.fadeIn(player: self.peacefulPlayer, fade: &self.peacefulFade, to: self.ambienceTargetVolume, duration: 1.5)
-                } else {
-                    self.fadeIn(player: self.ambiencePlayer, fade: &self.ambienceFade, to: self.ambienceTargetVolume, duration: 1.5)
+                // Fade in wartime ambience
+                self.ensurePlaying(self.ambiencePlayer)
+                self.fadeIn(player: self.ambiencePlayer, fade: &self.ambienceFade, to: self.ambienceTargetVolume, duration: 2.5)
+                
+                // Fade out others
+                self.fadeOut(player: self.peacefulPlayer, fade: &self.peacefulFade, duration: 2.5) { [weak self] in
+                    self?.peacefulPlayer?.pause()
+                }
+                self.fadeOut(player: self.level3Player, fade: &self.level3Fade, duration: 2.5) { [weak self] in
+                    self?.level3Player?.pause()
+                }
+                self.fadeOut(player: self.menuPlayer, fade: &self.menuFade, duration: 2.5) { [weak self] in
+                    self?.menuPlayer?.pause()
+                }
+                self.fadeOut(player: self.krotoszynPlayer, fade: &self.krotoszynFade, duration: 2.5) { [weak self] in
+                    self?.krotoszynPlayer?.pause()
                 }
             }
             
@@ -364,6 +460,10 @@ final class SynthAudioEngine: @unchecked Sendable {
         }
     }
     
+    func getLevel3PlayTime() -> TimeInterval {
+        return level3Player?.currentTime ?? 0.0
+    }
+    
     // MARK: - Private Playback
     
     private static func isPeacefulChapter(_ chapter: Chapter) -> Bool {
@@ -380,19 +480,62 @@ final class SynthAudioEngine: @unchecked Sendable {
     }
     
     private func startAmbience() {
-        let isPeaceful = Self.isPeacefulChapter(currentChapter)
-        
-        if isPeaceful {
+        if currentChapter == .jarocin {
+            ensurePlaying(level3Player)
+            fadeIn(player: level3Player, fade: &level3Fade, to: ambienceTargetVolume, duration: 3.0)
+            fadeOut(player: ambiencePlayer, fade: &ambienceFade, duration: 1.5) { [weak self] in
+                self?.ambiencePlayer?.pause()
+            }
+            fadeOut(player: peacefulPlayer, fade: &peacefulFade, duration: 1.5) { [weak self] in
+                self?.peacefulPlayer?.pause()
+            }
+            fadeOut(player: menuPlayer, fade: &menuFade, duration: 1.5) { [weak self] in
+                self?.menuPlayer?.pause()
+            }
+        } else if currentChapter == .krotoszyn {
+            ensurePlaying(krotoszynPlayer)
+            fadeIn(player: krotoszynPlayer, fade: &krotoszynFade, to: ambienceTargetVolume, duration: 3.0)
+            fadeOut(player: ambiencePlayer, fade: &ambienceFade, duration: 1.5) { [weak self] in
+                self?.ambiencePlayer?.pause()
+            }
+            fadeOut(player: peacefulPlayer, fade: &peacefulFade, duration: 1.5) { [weak self] in
+                self?.peacefulPlayer?.pause()
+            }
+            fadeOut(player: level3Player, fade: &level3Fade, duration: 1.5) { [weak self] in
+                self?.level3Player?.pause()
+            }
+            fadeOut(player: menuPlayer, fade: &menuFade, duration: 1.5) { [weak self] in
+                self?.menuPlayer?.pause()
+            }
+        } else if Self.isPeacefulChapter(currentChapter) {
             ensurePlaying(peacefulPlayer)
             fadeIn(player: peacefulPlayer, fade: &peacefulFade, to: ambienceTargetVolume, duration: 3.0)
             fadeOut(player: ambiencePlayer, fade: &ambienceFade, duration: 1.5) { [weak self] in
                 self?.ambiencePlayer?.pause()
+            }
+            fadeOut(player: level3Player, fade: &level3Fade, duration: 1.5) { [weak self] in
+                self?.level3Player?.pause()
+            }
+            fadeOut(player: menuPlayer, fade: &menuFade, duration: 1.5) { [weak self] in
+                self?.menuPlayer?.pause()
+            }
+            fadeOut(player: krotoszynPlayer, fade: &krotoszynFade, duration: 1.5) { [weak self] in
+                self?.krotoszynPlayer?.pause()
             }
         } else {
             ensurePlaying(ambiencePlayer)
             fadeIn(player: ambiencePlayer, fade: &ambienceFade, to: ambienceTargetVolume, duration: 3.0)
             fadeOut(player: peacefulPlayer, fade: &peacefulFade, duration: 1.5) { [weak self] in
                 self?.peacefulPlayer?.pause()
+            }
+            fadeOut(player: level3Player, fade: &level3Fade, duration: 1.5) { [weak self] in
+                self?.level3Player?.pause()
+            }
+            fadeOut(player: menuPlayer, fade: &menuFade, duration: 1.5) { [weak self] in
+                self?.menuPlayer?.pause()
+            }
+            fadeOut(player: krotoszynPlayer, fade: &krotoszynFade, duration: 1.5) { [weak self] in
+                self?.krotoszynPlayer?.pause()
             }
         }
     }
@@ -403,6 +546,15 @@ final class SynthAudioEngine: @unchecked Sendable {
         }
         fadeOut(player: peacefulPlayer, fade: &peacefulFade, duration: 1.5) { [weak self] in
             self?.peacefulPlayer?.pause()
+        }
+        fadeOut(player: level3Player, fade: &level3Fade, duration: 1.5) { [weak self] in
+            self?.level3Player?.pause()
+        }
+        fadeOut(player: menuPlayer, fade: &menuFade, duration: 1.5) { [weak self] in
+            self?.menuPlayer?.pause()
+        }
+        fadeOut(player: krotoszynPlayer, fade: &krotoszynFade, duration: 1.5) { [weak self] in
+            self?.krotoszynPlayer?.pause()
         }
     }
     
@@ -442,9 +594,12 @@ final class SynthAudioEngine: @unchecked Sendable {
         
         processFade(player: ambiencePlayer, fade: &ambienceFade, dt: dt)
         processFade(player: peacefulPlayer, fade: &peacefulFade, dt: dt)
+        processFade(player: level3Player, fade: &level3Fade, dt: dt)
         processFade(player: trainPlayer, fade: &trainFade, dt: dt)
         processFade(player: stukaPlayer, fade: &stukaFade, dt: dt)
         processFade(player: introJohnPlayer, fade: &introJohnFade, dt: dt)
+        processFade(player: menuPlayer, fade: &menuFade, dt: dt)
+        processFade(player: krotoszynPlayer, fade: &krotoszynFade, dt: dt)
     }
     
     private func processFade(player: AVAudioPlayer?, fade: inout FadeState, dt: TimeInterval) {

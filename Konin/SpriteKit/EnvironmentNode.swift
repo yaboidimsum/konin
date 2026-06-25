@@ -161,7 +161,7 @@ final class EnvironmentNode: SKNode {
 
             // Apply perspective calculation mirroring the rails
             let p = CGFloat(obj.progress)
-            let scale = 0.15625 + (1.0 - 0.15625) * p
+            let scale = 0.33333 + (1.0 - 0.33333) * p
             let x = sceneCenterX + (obj.lateralOffset * obj.side + visualOffset) * scale
             let y = horizonY - (horizonY - 180.0) * pow(p, 2.0)
 

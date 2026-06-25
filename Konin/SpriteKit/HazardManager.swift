@@ -77,7 +77,7 @@ final class HazardManager {
             default: X_track = 160.0
             }
             
-            let scaleFactor = 0.15625 + (1.0 - 0.15625) * CGFloat(t)
+            let scaleFactor = 0.33333 + (1.0 - 0.33333) * CGFloat(t)
             let visualX = cx + (X_track + scene.trainController.visualOffset) * scaleFactor
             
             let horizonY = scene.horizonY
