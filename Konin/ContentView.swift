@@ -8,15 +8,30 @@ import SwiftUI
 struct ContentView: View {
     @State private var director = GameDirector.shared
     
+    private var isWhiteBackgroundState: Bool {
+        switch director.currentState {
+        case .ending, .credits:
+            return true
+        case .playing(let chapter):
+            return chapter == .zolkiew
+        default:
+            return false
+        }
+    }
+    
     var body: some View {
         ZStack {
-            // Dark baseline background
-            Color.black
+            // Dynamic baseline background to prevent black flashes during transitions
+            (isWhiteBackgroundState ? Color.white : Color.black)
                 .ignoresSafeArea()
+                .animation(.easeInOut(duration: 1.0), value: isWhiteBackgroundState)
             
             switch director.currentState {
             case .menu:
                 MainMenuView()
+                    .transition(.opacity)
+            case .loading:
+                LoadingView()
                     .transition(.opacity)
             case .story(let chapter):
                 StoryView(chapter: chapter)
@@ -24,7 +39,6 @@ struct ContentView: View {
                     .transition(.opacity)
             case .playing(let chapter):
                 GameView(chapter: chapter)
-                    .id("playing-\(chapter.rawValue)")
                     .transition(.opacity)
             case .failed(let chapter):
                 FailedView(chapter: chapter)

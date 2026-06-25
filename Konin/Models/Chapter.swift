@@ -24,15 +24,36 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
         }
     }
     
-    var storyText: [String] {
+    var actTitle: String {
+        switch self {
+        case .krotoszyn: return "Chapter 1 — Krotoszyn"
+        case .kozmin: return "Chapter 2: Koźmin"
+        case .jarocin: return "Chapter 3: Jarocin"
+        case .tunnel: return "The Tunnel"
+        case .konin: return "Chapter 4: Konin"
+        case .zolkiew: return "Final Destination — Żółkiew"
+        }
+    }
+    
+    var storyHeader: String {
+        switch self {
+        case .krotoszyn: return "September 1st, 1939"
+        case .kozmin: return "Chapter 2 — Koźmin"
+        case .jarocin: return "Chapter 3 — Jarocin"
+        case .tunnel: return "The Tunnel"
+        case .konin: return "Chapter 4 — Konin"
+        case .zolkiew: return "Final Destination — Żółkiew"
+        }
+    }
+    
+    var storyParagraphs: [String] {
         switch self {
         case .krotoszyn:
             return [
-                "September 1, 1939.",
-                "The western border is breached. German forces are advancing rapidly.",
-                "My name is John. I am a railway operator.",
-                "My task is simple yet heavy: guide the evacuation train carrying civilian families away from the frontline.",
-                "Our journey starts here in Krotoszyn. We must head east, toward safety."
+                "Germany has broken through Poland's western frontier.",
+                "Blitzkrieg tactics have shattered the front lines, leaving Polish forces with little choice but to retreat",
+                "Across the country, evacuation trains depart toward the south, carrying the last hope of escape",
+                "May God protect the souls of those left behind."
             ]
         case .kozmin:
             return [
@@ -108,7 +129,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     var airRaidSpawnInterval: TimeInterval {
         switch self {
         case .krotoszyn, .kozmin: return 9999.0 // none
-        case .jarocin: return 12.0               // air raids
+        case .jarocin: return 4.5                // air raids
         case .tunnel: return 9999.0             // none
         case .konin, .zolkiew: return 9999.0    // none
         }
@@ -118,7 +139,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
         switch self {
         case .krotoszyn: return 320.0
         case .kozmin: return 480.0
-        case .jarocin: return 640.0
+        case .jarocin: return 1280.0
         case .tunnel: return 360.0
         case .konin: return 500.0
         case .zolkiew: return 0.0 // instant arrival/credits

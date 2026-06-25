@@ -7,104 +7,275 @@ import SwiftUI
 
 struct MainMenuView: View {
     let director = GameDirector.shared
-    @State private var animateStart = false
-    @State private var hovered = false
+    
+    @State private var isPlayHovered = false
+    @State private var isSelectHovered = false
+    @State private var isQuitHovered = false
+    @State private var hoveredChapter: Chapter? = nil
+    @State private var isBackHovered = false
+    
+    @State private var currentMenu: MenuState = .main
+    
+    private enum MenuState {
+        case main
+        case chapterSelect
+    }
+    
+    // Cached once at view initialization
+    private let backgroundImage: Image
+    
+    init() {
+        if let url = Bundle.main.url(forResource: "background-1", withExtension: "png"),
+           let nsImage = NSImage(contentsOf: url) {
+            self.backgroundImage = Image(nsImage: nsImage)
+        } else {
+            self.backgroundImage = Image("background-1") // Fallback
+        }
+    }
     
     var body: some View {
-        ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: [Color(white: 0.05), Color(white: 0.12)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-            
-            // Grid texture pattern for interest
-            GeometryReader { geo in
-                Path { path in
-                    let size = 40.0
-                    for x in stride(from: 0.0, to: geo.size.width, by: size) {
-                        path.move(to: CGPoint(x: x, y: 0))
-                        path.addLine(to: CGPoint(x: x, y: geo.size.height))
-                    }
-                    for y in stride(from: 0.0, to: geo.size.height, by: size) {
-                        path.move(to: CGPoint(x: 0, y: y))
-                        path.addLine(to: CGPoint(x: geo.size.width, y: y))
-                    }
-                }
-                .stroke(Color(white: 1.0, opacity: 0.02), lineWidth: 1)
-            }
-            
-            VStack(spacing: 40) {
-                Spacer()
+        GeometryReader { windowGeo in
+            ZStack {
+                // 1. FULL-SCREEN BACKGROUND IMAGE (Read from memory, no disk IO on redraw)
+                backgroundImage
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: windowGeo.size.width, height: windowGeo.size.height)
+                    .clipped()
                 
-                // Title Group
-                VStack(spacing: 12) {
-                    Text("LAST TRAIN EAST")
-                        .font(.system(size: 48, weight: .heavy, design: .serif))
+                // 2. FULL-SCREEN RADIAL GRADIENT OVERLAY
+                RadialGradient(
+                    gradient: Gradient(colors: [
+                        Color(red: 0.2, green: 0.17, blue: 0.17, opacity: 0.0),
+                        Color(red: 0.0, green: 0.04, blue: 0.03, opacity: 1.0)
+                    ]),
+                    center: UnitPoint(x: 0.46, y: 0.50),
+                    startRadius: 0,
+                    endRadius: max(windowGeo.size.width, windowGeo.size.height) * 0.6
+                )
+                .frame(width: windowGeo.size.width, height: windowGeo.size.height)
+                
+                // 3. SCALED FIGMA LAYOUT OVERLAY (1024x768 Canvas)
+                let targetSize = CGSize(width: 1024, height: 768)
+                let scale = min(windowGeo.size.width / targetSize.width, windowGeo.size.height / targetSize.height)
+                
+                ZStack {
+                    // TITLE TEXT (All Points South)
+                    Text("All Points South")
+                        .font(.custom("VCR OSD Mono", size: 96))
                         .foregroundColor(.white)
-                        .tracking(8)
-                        .shadow(color: .red.opacity(0.3), radius: 10, x: 0, y: 0)
+                        .frame(width: 900, height: 94, alignment: .leading)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .padding(.leading, 62)
+                        .padding(.top, 181)
                     
-                    Text("Escort the innocent. Outrun the storm.")
-                        .font(.system(size: 16, weight: .medium, design: .monospaced))
-                        .foregroundColor(.gray)
-                        .tracking(2)
-                }
-                
-                // Narrative context quote
-                Text("“September 1939. German forces push east into Poland. The rails are the last lifeline for thousands of fleeing families.”")
-                    .font(.system(size: 14, weight: .light, design: .serif))
-                    .italic()
-                    .foregroundColor(Color(white: 0.7))
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 500)
-                    .padding(.horizontal, 40)
-                    .padding(.vertical, 24)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(white: 1.0, opacity: 0.03))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(white: 1.0, opacity: 0.08), lineWidth: 1)
-                            )
-                    )
-                
-                Spacer()
-                
-                // Play Button
-                Button(action: {
-                    withAnimation {
-                        director.startGame()
+                    // MENU PANEL (Main / Chapter Select)
+                    VStack(spacing: 16) {
+                        if currentMenu == .main {
+                            // Play Game Button
+                            Button(action: {
+                                withAnimation {
+                                    director.startGame()
+                                }
+                            }) {
+                                Text("Play Game")
+                                    .font(.custom("VCR OSD Mono", size: 24))
+                                    .tracking(24 * -0.06) // letterSpacing: -0.06em
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 16)
+                                    .padding(.horizontal, 20)
+                                    .frame(maxWidth: .infinity)
+                                    .background(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                Color(red: 98/255, green: 109/255, blue: 95/255),
+                                                Color(red: 35/255, green: 39/255, blue: 34/255)
+                                            ]),
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .overlay(
+                                        Rectangle()
+                                            .stroke(isPlayHovered ? Color.white : Color(red: 40/255, green: 45/255, blue: 39/255), lineWidth: 4)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .onHover { h in
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    isPlayHovered = h
+                                }
+                            }
+                            
+                            // Select Chapter Button
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    currentMenu = .chapterSelect
+                                }
+                            }) {
+                                Text("Select Chapter")
+                                    .font(.custom("VCR OSD Mono", size: 24))
+                                    .tracking(24 * -0.06)
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 16)
+                                    .padding(.horizontal, 20)
+                                    .frame(maxWidth: .infinity)
+                                    .background(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                Color(red: 98/255, green: 109/255, blue: 95/255),
+                                                Color(red: 35/255, green: 39/255, blue: 34/255)
+                                            ]),
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .overlay(
+                                        Rectangle()
+                                            .stroke(isSelectHovered ? Color.white : Color(red: 40/255, green: 45/255, blue: 39/255), lineWidth: 4)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .onHover { h in
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    isSelectHovered = h
+                                }
+                            }
+                            
+                            // Quit Button
+                            Button(action: {
+                                #if os(macOS)
+                                NSApplication.shared.terminate(nil)
+                                #endif
+                            }) {
+                                Text("Quit")
+                                    .font(.custom("VCR OSD Mono", size: 24))
+                                    .tracking(24 * -0.06)
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 16)
+                                    .padding(.horizontal, 20)
+                                    .frame(maxWidth: .infinity)
+                                    .background(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                Color(red: 98/255, green: 109/255, blue: 95/255),
+                                                Color(red: 35/255, green: 39/255, blue: 34/255)
+                                            ]),
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .overlay(
+                                        Rectangle()
+                                            .stroke(isQuitHovered ? Color.white : Color(red: 40/255, green: 45/255, blue: 39/255), lineWidth: 4)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .onHover { h in
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    isQuitHovered = h
+                                }
+                            }
+                        } else {
+                            // Chapter Select list
+                            ScrollView(.vertical, showsIndicators: false) {
+                                VStack(spacing: 8) {
+                                    ForEach(Chapter.allCases, id: \.self) { chapter in
+                                        Button(action: {
+                                            withAnimation {
+                                                director.changeState(to: .story(chapter))
+                                            }
+                                        }) {
+                                            Text(chapter.title)
+                                                .font(.custom("VCR OSD Mono", size: 14))
+                                                .foregroundColor(.white)
+                                                .padding(.vertical, 10)
+                                                .padding(.horizontal, 12)
+                                                .frame(maxWidth: .infinity)
+                                                .background(
+                                                    LinearGradient(
+                                                        gradient: Gradient(colors: [
+                                                            Color(red: 98/255, green: 109/255, blue: 95/255),
+                                                            Color(red: 35/255, green: 39/255, blue: 34/255)
+                                                        ]),
+                                                        startPoint: .top,
+                                                        endPoint: .bottom
+                                                    )
+                                                )
+                                                .overlay(
+                                                    Rectangle()
+                                                        .stroke(hoveredChapter == chapter ? Color.white : Color(red: 40/255, green: 45/255, blue: 39/255), lineWidth: 2)
+                                                )
+                                        }
+                                        .buttonStyle(.plain)
+                                        .onHover { h in
+                                            withAnimation(.easeInOut(duration: 0.15)) {
+                                                hoveredChapter = h ? chapter : nil
+                                            }
+                                        }
+                                    }
+                                    
+                                    Spacer().frame(height: 6)
+                                    
+                                    // Back Button
+                                    Button(action: {
+                                        withAnimation(.easeInOut(duration: 0.25)) {
+                                            currentMenu = .main
+                                        }
+                                    }) {
+                                        Text("<< Back")
+                                            .font(.custom("VCR OSD Mono", size: 16))
+                                            .foregroundColor(.white)
+                                            .padding(.vertical, 10)
+                                            .padding(.horizontal, 12)
+                                            .frame(maxWidth: .infinity)
+                                            .background(
+                                                LinearGradient(
+                                                    gradient: Gradient(colors: [
+                                                        Color(red: 120/255, green: 80/255, blue: 80/255),
+                                                        Color(red: 50/255, green: 30/255, blue: 30/255)
+                                                    ]),
+                                                    startPoint: .top,
+                                                    endPoint: .bottom
+                                                )
+                                            )
+                                            .overlay(
+                                                Rectangle()
+                                                    .stroke(isBackHovered ? Color.white : Color(red: 60/255, green: 35/255, blue: 35/255), lineWidth: 2)
+                                            )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .onHover { h in
+                                        withAnimation(.easeInOut(duration: 0.15)) {
+                                            isBackHovered = h
+                                        }
+                                    }
+                                }
+                            }
+                            .frame(maxHeight: 330)
+                        }
                     }
-                }) {
-                    Text("BEGIN THE JOURNEY")
-                        .font(.system(size: 16, weight: .bold, design: .monospaced))
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 48)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(hovered ? Color.red : Color.white)
-                                .shadow(color: hovered ? Color.red.opacity(0.5) : Color.white.opacity(0.3), radius: hovered ? 12 : 6)
-                        )
-                        .scaleEffect(hovered ? 1.05 : 1.0)
+                    .padding(16)
+                    .frame(width: 280)
+                    .background(Color.black.opacity(0.45))
+                    .cornerRadius(8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .padding(.leading, 372) // Adjusted leading padding to keep centered (1024 - 280)/2 = 372
+                    .padding(.top, 319)    // Adjusted top padding slightly
+                    
+                    // OSD INSTRUCTIONS BAR (bottom center)
+                    Text("OSD INSTRUCTIONS: WASD/ARROWS - MOVE/DUCK | SPACE - COAL | H - HONK")
+                        .font(.custom("VCR OSD Mono", size: 12))
+                        .foregroundColor(Color(white: 0.6))
+                        .frame(width: 1024)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                        .padding(.bottom, 36)
                 }
-                .buttonStyle(.plain)
-                .onHover { isHovered in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        hovered = isHovered
-                    }
-                }
-                
-                Text("Use WASD/Arrows to switch tracks and duck. Space to fuel the furnace.")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(.gray.opacity(0.8))
-                
-                Spacer()
+                .frame(width: targetSize.width, height: targetSize.height)
+                .scaleEffect(scale)
+                .position(x: windowGeo.size.width / 2, y: windowGeo.size.height / 2)
             }
-            .padding()
         }
+        .background(Color.black)
     }
 }

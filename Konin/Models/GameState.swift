@@ -7,6 +7,7 @@ import Foundation
 
 enum GameState: Equatable {
     case menu
+    case loading
     case story(Chapter)
     case playing(Chapter)
     case failed(Chapter) // Added for when coal runs out

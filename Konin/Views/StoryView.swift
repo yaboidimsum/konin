@@ -9,62 +9,162 @@ struct StoryView: View {
     let chapter: Chapter
     let director = GameDirector.shared
     
+    @State private var lineOpacities: [Double]
+    @State private var showContinue = false
+    @State private var blinkContinue = false
+    
+    init(chapter: Chapter) {
+        self.chapter = chapter
+        let lineCount = chapter.storyParagraphs.count + 1
+        self._lineOpacities = State(initialValue: Array(repeating: 0.0, count: lineCount))
+    }
+    
     var body: some View {
-        ZStack {
-            // Dark thematic background
-            Color(white: 0.05)
-                .ignoresSafeArea()
+        GeometryReader { windowGeo in
+            let targetSize = CGSize(width: 1024, height: 768)
+            let scale = min(windowGeo.size.width / targetSize.width, windowGeo.size.height / targetSize.height)
             
-            VStack(spacing: 30) {
-                // Chapter Heading
-                Text(chapter.title.uppercased())
-                    .font(.system(size: 24, weight: .bold, design: .serif))
-                    .foregroundColor(chapter == .konin ? .teal : .red.opacity(0.8))
-                    .tracking(4)
+            ZStack {
+                // 1. BLACK BACKGROUND
+                Color.black
+                    .frame(width: targetSize.width, height: targetSize.height)
                 
-                Spacer()
+                // 2. RADIAL GRADIENT OVERLAY
+                RadialGradient(
+                    gradient: Gradient(colors: [
+                        Color(red: 0.2, green: 0.17, blue: 0.17, opacity: 0.0),
+                        Color(red: 0.0, green: 0.04, blue: 0.03, opacity: 1.0)
+                    ]),
+                    center: UnitPoint(x: 0.46, y: 0.50),
+                    startRadius: 0,
+                    endRadius: 550
+                )
+                .frame(width: targetSize.width, height: targetSize.height)
                 
-                // Story lines display - instantly shown all at once
-                VStack(alignment: .leading, spacing: 20) {
-                    ForEach(chapter.storyText, id: \.self) { line in
-                        Text(line)
-                            .font(.system(size: 18, weight: .regular, design: .serif))
-                            .foregroundColor(.white)
-                            .lineSpacing(6)
+                // 3. STORY LAYOUT
+                ZStack {
+                    // Header/Date (x: 129, y: 197)
+                    Text(chapter.storyHeader)
+                        .font(.custom("VCR OSD Mono", size: 24))
+                        .foregroundColor(.white)
+                        .tracking(24 * -0.06) // letterSpacing: -0.06em
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .opacity(lineOpacities.indices.contains(0) ? lineOpacities[0] : 0.0)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .padding(.leading, 129)
+                        .padding(.top, 197)
+                    
+                    // Body Column (x: 129, y: 294, width: 734)
+                    VStack(alignment: .leading, spacing: 21) {
+                        ForEach(0..<chapter.storyParagraphs.count, id: \.self) { index in
+                            let opacityIndex = index + 1
+                            Text(chapter.storyParagraphs[index])
+                                .font(.custom("VCR OSD Mono", size: 24))
+                                .foregroundColor(.white)
+                                .tracking(24 * -0.06)
+                                .lineSpacing(4)
+                                .lineLimit(nil)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .opacity(lineOpacities.indices.contains(opacityIndex) ? lineOpacities[opacityIndex] : 0.0)
+                        }
+                    }
+                    .frame(width: 734, alignment: .leading)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .padding(.leading, 129)
+                    .padding(.top, 294)
+                    
+                    // Click to Continue Prompt (blinking, bottom center)
+                    if showContinue {
+                        Text("Click to continue")
+                            .font(.custom("VCR OSD Mono", size: 18))
+                            .foregroundColor(Color(white: 0.6))
+                            .tracking(18 * -0.06)
+                            .opacity(blinkContinue ? 0.2 : 1.0)
+                            .frame(width: 1024)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                            .padding(.bottom, 60)
+                            .transition(.opacity)
                     }
                 }
-                .frame(maxWidth: 600, alignment: .leading)
-                .padding(40)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(white: 1.0, opacity: 0.02))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(white: 1.0, opacity: 0.05), lineWidth: 1)
-                        )
-                )
-                
-                Spacer()
-                
-                // Depart/Start Button shown instantly
-                Button(action: {
-                    director.advanceFromStory(chapter)
-                }) {
-                    Text(chapter == .zolkiew ? "ARRIVE AT STATION" : "DEPART STATION")
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 36)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(chapter == .konin ? Color.teal : Color.red)
-                        )
-                }
-                .buttonStyle(.plain)
-                
-                Spacer()
+                .frame(width: targetSize.width, height: targetSize.height)
+                .scaleEffect(scale)
+                .position(x: windowGeo.size.width / 2, y: windowGeo.size.height / 2)
             }
-            .padding()
+            .contentShape(Rectangle())
+            .onTapGesture {
+                handleTap()
+            }
+        }
+        .background(Color.black)
+        .onAppear {
+            startTextAnimation()
+        }
+    }
+    
+    private func startTextAnimation() {
+        let lineCount = chapter.storyParagraphs.count + 1
+        lineOpacities = Array(repeating: 0.0, count: lineCount)
+        showContinue = false
+        blinkContinue = false
+        
+        // Wait 0.8s for the screen fade-in transition to fully complete, then fade in the header slowly
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            guard director.currentState == .story(chapter) else { return }
+            withAnimation(.easeIn(duration: 2.0)) {
+                if lineOpacities.indices.contains(0) {
+                    lineOpacities[0] = 1.0
+                }
+            }
+        }
+        
+        for i in 0..<chapter.storyParagraphs.count {
+            let delay = 0.8 + 2.0 + Double(i) * 2.2
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                guard director.currentState == .story(chapter) else { return }
+                
+                withAnimation(.easeIn(duration: 2.0)) {
+                    let opacityIndex = i + 1
+                    if lineOpacities.indices.contains(opacityIndex) {
+                        lineOpacities[opacityIndex] = 1.0
+                    }
+                }
+            }
+        }
+        
+        let totalDelay = 0.8 + 2.0 + Double(chapter.storyParagraphs.count) * 2.2 + 1.2
+        DispatchQueue.main.asyncAfter(deadline: .now() + totalDelay) {
+            guard director.currentState == .story(chapter) else { return }
+            
+            withAnimation(.easeIn(duration: 1.0)) {
+                showContinue = true
+            }
+            
+            withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                blinkContinue = true
+            }
+        }
+    }
+    
+    private func handleTap() {
+        let isFullyLoaded = !lineOpacities.contains(where: { $0 < 1.0 })
+        if isFullyLoaded {
+            // Advance to the game with a very slow cinematic transition (4.0 seconds)
+            withAnimation(.easeInOut(duration: 4.0)) {
+                director.advanceFromStory(chapter)
+            }
+        } else {
+            // Skip the fade animation, display all text immediately and show prompt
+            withAnimation {
+                let lineCount = chapter.storyParagraphs.count + 1
+                lineOpacities = Array(repeating: 1.0, count: lineCount)
+                showContinue = true
+            }
+            
+            withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                blinkContinue = true
+            }
         }
     }
 }
+

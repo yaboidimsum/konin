@@ -6,6 +6,7 @@
 import Foundation
 import Observation
 import SpriteKit
+import SwiftUI
 
 @Observable
 final class GameDirector {
@@ -23,10 +24,15 @@ final class GameDirector {
     
     init() {
         audio.start()
+        audio.startMenuMusic()
     }
     
     func changeState(to newState: GameState) {
         currentState = newState
+        
+        if newState != .menu {
+            audio.stopMenuMusic(duration: 1.5)
+        }
         
         switch newState {
         case .menu:
@@ -35,16 +41,26 @@ final class GameDirector {
             audio.setAmbienceActive(false)
             audio.setChapter(.krotoszyn)
             audio.setSpeedRatio(1.0)
+            audio.startMenuMusic()
+        case .loading:
+            break
         case .story(let chapter):
             activeChapter = chapter
-            audio.setAmbienceActive(false)
             audio.setChapter(chapter)
+            if chapter == .krotoszyn {
+                audio.startIntroJohn()
+            } else {
+                audio.setAmbienceActive(false)
+            }
             audio.setSpeedRatio(0.3)
         case .playing(let chapter):
             activeChapter = chapter
             coalPercentage = 100.0
             distanceTravelled = 0.0
             audio.setChapter(chapter)
+            if chapter == .krotoszyn {
+                audio.stopIntroJohn(duration: 4.0)
+            }
             audio.setAmbienceActive(true)
             audio.setSpeedRatio(1.0)
         case .failed:
@@ -63,7 +79,7 @@ final class GameDirector {
     }
     
     func startGame() {
-        changeState(to: .story(.krotoszyn))
+        changeState(to: .loading)
     }
     
     func advanceFromStory(_ chapter: Chapter) {
@@ -75,10 +91,12 @@ final class GameDirector {
     }
     
     func completeChapter(_ chapter: Chapter) {
-        if let nextChapter = chapter.next {
-            changeState(to: .story(nextChapter))
-        } else {
-            changeState(to: .ending)
+        withAnimation(.easeInOut(duration: 1.5)) {
+            if let nextChapter = chapter.next {
+                changeState(to: .playing(nextChapter))
+            } else {
+                changeState(to: .ending)
+            }
         }
     }
     
@@ -96,7 +114,9 @@ final class GameDirector {
         if let scene = activeScene {
             scene.triggerFailFade(chapter: activeChapter)
         } else {
-            changeState(to: .failed(activeChapter))
+            withAnimation(.easeInOut(duration: 1.0)) {
+                changeState(to: .failed(activeChapter))
+            }
         }
     }
 }
