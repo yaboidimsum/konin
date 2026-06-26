@@ -151,7 +151,7 @@ final class GameScene: SKScene {
         isWaitingToStart = true
         
         // Reset — startup ramp, begin at center lane
-        trainController.resetStartup()
+        trainController.resetStartup() 
         trainController.currentLane = 1
         trainController.targetLane = 1
         trainController.visualOffset = 0.0     // center lane = 0 offset
@@ -1434,6 +1434,13 @@ final class GameScene: SKScene {
             trainController.setDucked(true)
         case 49: // Space — stoke furnace
             coalSystem.stokeCoal()
+        case 12: // Q — jalan
+            trainController.setBraking(false)
+            return true
+        case 11: // B — brake
+            trainController.setBraking(true)
+            
+            return true
         default:
             return false
         }
@@ -1447,6 +1454,7 @@ final class GameScene: SKScene {
         switch keyCode {
         case 1, 125: // S / Down Arrow
             trainController.setDucked(false)
+            return true
         default:
             return false
         }
