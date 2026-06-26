@@ -127,12 +127,15 @@ final class GameScene: SKScene {
         #if os(macOS)
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
             guard let self = self, self.isConfigured else { return event }
+            let handled: Bool
             if event.type == .keyDown {
-                self.keyDown(with: event)
+                handled = self.handleKeyDown(keyCode: event.keyCode, characters: event.charactersIgnoringModifiers)
             } else if event.type == .keyUp {
-                self.keyUp(with: event)
+                handled = self.handleKeyUp(keyCode: event.keyCode)
+            } else {
+                handled = false
             }
-            return event
+            return handled ? nil : event
         }
         #endif
         
@@ -1402,9 +1405,23 @@ final class GameScene: SKScene {
     // Keyboard Event Handling (macOS Responder methods)
     #if os(macOS)
     override func keyDown(with event: NSEvent) {
-        guard isConfigured && !isWaitingToStart else { return }
+        _ = handleKeyDown(keyCode: event.keyCode, characters: event.charactersIgnoringModifiers)
+    }
+    
+    override func keyUp(with event: NSEvent) {
+        _ = handleKeyUp(keyCode: event.keyCode)
+    }
+    
+    private func handleKeyDown(keyCode: UInt16, characters: String?) -> Bool {
+        guard isConfigured else { return false }
         
-        let keyCode = event.keyCode
+        let normalizedKey = characters?.lowercased()
+        if keyCode == 4 || normalizedKey == "h" {
+            SynthAudioEngine.shared.playHonk()
+            return true
+        }
+        
+        guard !isWaitingToStart else { return false }
         
         switch keyCode {
         case 0, 123: // A / Left Arrow — shift one lane left
@@ -1417,25 +1434,24 @@ final class GameScene: SKScene {
             trainController.setDucked(true)
         case 49: // Space — stoke furnace
             coalSystem.stokeCoal()
-        case 4: // H — play train honk
-            SynthAudioEngine.shared.playHonk()
         default:
-            break
+            return false
         }
+        
+        return true
     }
     
-    override func keyUp(with event: NSEvent) {
-        guard isConfigured && !isWaitingToStart else { return }
-        
-        let keyCode = event.keyCode
+    private func handleKeyUp(keyCode: UInt16) -> Bool {
+        guard isConfigured && !isWaitingToStart else { return false }
         
         switch keyCode {
         case 1, 125: // S / Down Arrow
-            // Stop ducking
             trainController.setDucked(false)
         default:
-            break
+            return false
         }
+        
+        return true
     }
     #endif
     
