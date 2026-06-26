@@ -129,9 +129,11 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var obstacleSpawnInterval: TimeInterval {
         switch self {
-        case .prolog, .krotoszyn, .tunnel, .konin, .zolkiew: return 9999.0
-        case .kozmin: return 6.0
-        case .jarocin: return 4.0
+        case .krotoszyn: return 9999.0 // none
+        case .kozmin: return 6.0      // normal obstacles
+        case .jarocin: return 2.8     // frequent obstacles
+        case .tunnel: return 9999.0   // none
+        case .konin, .zolkiew: return 9999.0 // none
         }
     }
     

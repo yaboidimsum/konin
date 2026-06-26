@@ -334,6 +334,19 @@ final class GameScene: SKScene {
         node.addChild(bgSprite)
     }
     
+    private func setupTiledHorizon(texture: SKTexture, backgroundColor: SKColor) {
+        skyNode.texture = nil
+        skyNode.color = backgroundColor
+        
+        let sprite = SKSpriteNode(texture: texture, size: CGSize(width: 1024, height: 288))
+        sprite.name = "horizon_sprite_center"
+        sprite.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        sprite.position = .zero
+        sprite.zPosition = 0.01
+        sprite.alpha = 0.0  // Start hidden
+        skyNode.addChild(sprite)
+    }
+    
     // MARK: - Procedural City Skylines
     
     /// Draws a procedurally-generated city silhouette sitting on the horizon line.
@@ -975,15 +988,9 @@ final class GameScene: SKScene {
 
     
     private func applyChapterStyling(_ chapter: Chapter) {
-        // Toggle city silhouette visibility based on active chapter (Krotoszyn is the first city)
-        if chapter == .krotoszyn {
-            citySilhouette?.isHidden = false
-            citySilhouette?.alpha = 0.0
-            citySilhouette?.setScale(0.70)
-        } else {
-            citySilhouette?.isHidden = true
-            citySilhouette?.alpha = 0.0
-        }
+        // Toggle city silhouette visibility based on active chapter (Always hidden to remove placeholder "big x")
+        citySilhouette?.isHidden = true
+        citySilhouette?.alpha = 0.0
         
         // Hide city skylines and environment during tunnel
         if chapter == .tunnel {
@@ -999,30 +1006,27 @@ final class GameScene: SKScene {
         
         updateWartimeSky(isWartime: (chapter == .jarocin))
         
-        // Reset texture to nil so fallback to solid colors works for other chapters
+        // Remove existing horizon sprite
+        skyNode?.childNode(withName: "horizon_sprite_center")?.removeFromParent()
+        
+        // Reset texture and size to default so other chapters work correctly
         skyNode?.texture = nil
+        skyNode?.size = CGSize(width: size.width * 2, height: size.height - horizonY)
         
         switch chapter {
-        case .prolog, .krotoszyn:
-            // Horizon Sky color #0D4969
-            skyNode.texture = nil
-            skyNode.color = SKColor(red: 13.0/255.0, green: 73.0/255.0, blue: 105.0/255.0, alpha: 1.0)
+        case .krotoszyn:
+            let tex = SKTexture(imageNamed: "horizon-1")
+            tex.filteringMode = .nearest
+            setupTiledHorizon(texture: tex, backgroundColor: SKColor(red: 13.0/255.0, green: 73.0/255.0, blue: 105.0/255.0, alpha: 1.0))
             groundNode.color = SKColor(red: 0.28, green: 0.35, blue: 0.22, alpha: 1.0)
             horizonLine.color = SKColor(red: 0.4, green: 0.35, blue: 0.2, alpha: 1.0)
             tunnelDarkness.alpha = 0.0
             headlightBeam.alpha = 0.0
             updateRailsColor(.lightGray)
         case .kozmin:
-            // Stormy Grey (Foggy green-grey bottom to Deep navy-charcoal top)
-            let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
-            let topColor = SKColor(red: 0.12, green: 0.14, blue: 0.17, alpha: 1.0)
-            let bottomColor = SKColor(red: 0.36, green: 0.39, blue: 0.36, alpha: 1.0)
-            if let gradTexture = createSkyGradientTexture(size: skySize, topColor: topColor, bottomColor: bottomColor) {
-                skyNode.texture = gradTexture
-                skyNode.color = .white
-            } else {
-                skyNode.color = topColor
-            }
+            let tex = SKTexture(imageNamed: "horizon-2")
+            tex.filteringMode = .nearest
+            setupTiledHorizon(texture: tex, backgroundColor: SKColor(red: 105.0/255.0, green: 173.0/255.0, blue: 185.0/255.0, alpha: 1.0))
             groundNode.color = SKColor(red: 0.22, green: 0.2, blue: 0.18, alpha: 1.0)
             horizonLine.color = SKColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
             tunnelDarkness.alpha = 0.0
@@ -1677,7 +1681,7 @@ final class GameScene: SKScene {
         
         // Scale starts at 0.70 (very far away, small silhouette) and grows to 1.40 (close)
         // Opacity starts at 0.0 (completely hidden/hazy) and rises to 1.0 (fully visible)
-        let targetScale = 0.70 + progress * 0.70
+        let targetScale = 0.01 + progress * 0.70
         let targetAlpha = progress
         
         if let cityNode = citySilhouette, !cityNode.isHidden {
@@ -1694,6 +1698,17 @@ final class GameScene: SKScene {
             let currentScale = skylinesNode.xScale
             let newScale = currentScale + (targetScale - currentScale) * 0.08
             skylinesNode.setScale(newScale)
+        }
+        
+        // Update center horizon sprite scale (starts small at 0.65, zooms to 1.05 in center)
+        // and fade in based on distance progress
+        if activeChapter == .krotoszyn || activeChapter == .kozmin {
+            let horizonScale = 0.05 + progress * 0.40
+            if let centerNode = skyNode.childNode(withName: "horizon_sprite_center") {
+                centerNode.setScale(horizonScale)
+                centerNode.position = .zero
+                centerNode.alpha = CGFloat(progress)
+            }
         }
     }
 
