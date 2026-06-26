@@ -35,6 +35,7 @@ final class TrainController {
     var duckVisualOffset: CGFloat = 0.0
     
     var hasTriggeredEnding: Bool = false
+    var isBraking: Bool = false
     
     // Startup ramp
     private var startupTimer: TimeInterval = 0.0
@@ -68,7 +69,9 @@ final class TrainController {
             let coalFactor = GameDirector.shared.coalPercentage / 100.0
             let topSpeed = chapter == .konin ? 25.0 : (15.0 + coalFactor * 20.0)
             
-            if isStartingUp {
+            if isBraking {
+                targetSpeed = 0.0
+            } else if isStartingUp {
                 startupTimer += deltaTime
                 let ramp = min(1.0, startupTimer / startupDuration)
                 let easedRamp = ramp * ramp * (3.0 - 2.0 * ramp)
@@ -170,6 +173,7 @@ final class TrainController {
     }
     
     func resetStartup() {
+        isBraking = true
         isStartingUp = true
         startupTimer = 0.0
         speed = 0.0
@@ -177,5 +181,12 @@ final class TrainController {
         visualOffsetVelocity = 0.0
         leanVelocity = 0.0
         switchCooldownTimer = 0.0
+    }
+    
+    func setBraking(_ braking: Bool) { 
+        isBraking = braking
+        if braking {
+            SynthAudioEngine.shared.setSpeedRatio(0.0)
+        }
     }
 }
