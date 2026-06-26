@@ -18,7 +18,7 @@ final class SynthAudioEngine: @unchecked Sendable {
     private var damagePlayer: AVAudioPlayer?        // damage.mp3
     private var explosion1Player: AVAudioPlayer?    // dragon-studio-loud-explosion-425457.mp3
     private var explosion2Player: AVAudioPlayer?    // universfield-epic-cinematic-explosion-454857.mp3
-    private var honkPlayer: AVAudioPlayer?          // YTMP3GG_YouTube_train-sound-effect_Media_SXWldxHxKgU_006_128k.mp3
+    private var honkPlayer: AVAudioPlayer?          // Horn.mp3
     private var menuPlayer: AVAudioPlayer?          // Medal of Honor Allied Assault theme (menu background music)
     private var krotoszynPlayer: AVAudioPlayer?     // Medal of Honor Allied Assault Lighting (Chapter 1 gameplay)
     private var introJohnPlayer: AVAudioPlayer?     // Introduction-john.mp3 (intro screen background music)
@@ -77,7 +77,7 @@ final class SynthAudioEngine: @unchecked Sendable {
         loadPlayer(resource: "damage", store: &damagePlayer, initialVolume: 0.0)
         loadPlayer(resource: "dragon-studio-loud-explosion-425457", store: &explosion1Player, initialVolume: 0.0)
         loadPlayer(resource: "universfield-epic-cinematic-explosion-454857", store: &explosion2Player, initialVolume: 0.0)
-        loadPlayer(resource: "YTMP3GG_YouTube_train-sound-effect_Media_SXWldxHxKgU_006_128k", store: &honkPlayer, initialVolume: 0.0)
+        loadPlayer(resource: "Horn", store: &honkPlayer, initialVolume: 0.0)
         loadPlayer(resource: "YTMP3GG_YouTube_01-Medal-of-Honor-Allied-Assault-Main-Ti_Media_-kWeJ9ywQJM_006_128k", store: &menuPlayer, initialVolume: 0.0)
         loadPlayer(resource: "YTMP3GG_YouTube_05-Medal-of-Honor-Allied-Assault-Lightin_Media_G0t4Y-cdDNE_005_128k", store: &krotoszynPlayer, initialVolume: 0.0)
         loadPlayer(resource: "Introduction-john", store: &introJohnPlayer, initialVolume: 0.0)
