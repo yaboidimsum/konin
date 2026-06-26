@@ -781,9 +781,12 @@ final class SynthAudioEngine: @unchecked Sendable {
         }
     }
     
-    private func stopTrainSound() {
-        fadeOut(player: trainPlayer, fade: &trainFade, duration: 2.0) { [weak self] in
-            self?.trainPlayer?.pause()
+    func stopTrainSound() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.fadeOut(player: self.trainPlayer, fade: &self.trainFade, duration: 2.0) { [weak self] in
+                self?.trainPlayer?.pause()
+            }
         }
     }
     

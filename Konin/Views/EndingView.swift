@@ -109,6 +109,7 @@ struct EndingView: View {
                     VStack(spacing: 30) {
                         Image("TrainWreck")
                             .resizable()
+                            .interpolation(.none)
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 734, height: 413)
                             .cornerRadius(6)

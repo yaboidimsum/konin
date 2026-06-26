@@ -21,7 +21,6 @@ final class EnvironmentNode: SKNode {
         case haystack
         case boulder
         case floweringBush
-        case cherryBlossomTree
     }
 
     private enum Layer {
@@ -214,7 +213,7 @@ final class EnvironmentNode: SKNode {
             let pool: [ObjectType] = [
                 .deciduousTreeDark, .deciduousTreeOlive, .pineTree,
                 .bush, .telegraphPole, .farmhouse,
-                .cherryBlossomTree, .floweringBush
+                .floweringBush
             ]
             return pool.randomElement()!
         default:
@@ -229,11 +228,9 @@ final class EnvironmentNode: SKNode {
 
         switch type {
         case .deciduousTreeDark:
-            let color = isWartime ? SKColor(red: 0.16, green: 0.15, blue: 0.14, alpha: 1.0) : SKColor(red: 0.17, green: 0.42, blue: 0.19, alpha: 1.0)
-            buildDeciduousTree(in: container, crownColor: color, isWartime: isWartime)
+            buildDeciduousTree(in: container, imageName: "tree-oak", isWartime: isWartime)
         case .deciduousTreeOlive:
-            let color = isWartime ? SKColor(red: 0.22, green: 0.20, blue: 0.18, alpha: 1.0) : SKColor(red: 0.24, green: 0.46, blue: 0.22, alpha: 1.0)
-            buildDeciduousTree(in: container, crownColor: color, isWartime: isWartime)
+            buildDeciduousTree(in: container, imageName: "tree-birch", isWartime: isWartime)
         case .pineTree:
             buildPineTree(in: container, isWartime: isWartime)
         case .bush:
@@ -250,142 +247,82 @@ final class EnvironmentNode: SKNode {
             buildBoulder(in: container)
         case .floweringBush:
             buildFloweringBush(in: container)
-        case .cherryBlossomTree:
-            buildCherryBlossomTree(in: container)
         }
     }
 
     // MARK: Deciduous Tree
 
-    private func buildDeciduousTree(in container: SKNode, crownColor: SKColor, isWartime: Bool) {
-        let trunkWidth:  CGFloat = 8
-        let trunkHeight: CGFloat = CGFloat.random(in: 40...60)
-        let trunkColor = isWartime ? SKColor(red: 0.18, green: 0.15, blue: 0.12, alpha: 1.0) : SKColor(red: 0.36, green: 0.25, blue: 0.15, alpha: 1.0)
+    // MARK: Deciduous Tree
 
-        let trunk = SKSpriteNode(color: trunkColor,
-                                 size: CGSize(width: trunkWidth, height: trunkHeight))
-        trunk.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        trunk.position = .zero
-        container.addChild(trunk)
-
-        let crownWidth:  CGFloat = isWartime ? CGFloat.random(in: 20...30) : CGFloat.random(in: 35...50)
-        let crownHeight: CGFloat = isWartime ? CGFloat.random(in: 18...28) : CGFloat.random(in: 30...45)
-
-        let crown = SKSpriteNode(color: crownColor,
-                                 size: CGSize(width: crownWidth, height: crownHeight))
-        crown.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        crown.position = CGPoint(x: 0, y: trunkHeight - 4) // slight overlap
-        container.addChild(crown)
-
+    private func buildDeciduousTree(in container: SKNode, imageName: String, isWartime: Bool) {
+        let tex = SKTexture(imageNamed: imageName)
+        tex.filteringMode = .nearest
+        
+        let tree = SKSpriteNode(texture: tex)
+        tree.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        tree.position = .zero
+        
         if isWartime {
-            // Add a dead bare branch on the side during wartime
-            let branch = SKSpriteNode(color: trunkColor, size: CGSize(width: 14, height: 4))
-            branch.anchorPoint = CGPoint(x: 0.0, y: 0.5)
-            branch.position = CGPoint(x: 2, y: trunkHeight * 0.6)
-            branch.zRotation = .pi / 6
-            container.addChild(branch)
+            // Tint tree to look burnt/dark
+            tree.color = SKColor(red: 0.15, green: 0.14, blue: 0.13, alpha: 1.0)
+            tree.colorBlendFactor = 0.85
         }
+        
+        container.addChild(tree)
     }
 
     // MARK: Pine Tree
 
     private func buildPineTree(in container: SKNode, isWartime: Bool) {
-        let trunkWidth:  CGFloat = 6
-        let trunkHeight: CGFloat = CGFloat.random(in: 50...70)
-        let pineGreen = isWartime ? SKColor(red: 0.15, green: 0.14, blue: 0.13, alpha: 1.0) : SKColor(red: 0.11, green: 0.30, blue: 0.15, alpha: 1.0)
-        let trunkColor = isWartime ? SKColor(red: 0.18, green: 0.15, blue: 0.12, alpha: 1.0) : SKColor(red: 0.36, green: 0.25, blue: 0.15, alpha: 1.0)
-
-        let trunk = SKSpriteNode(color: trunkColor,
-                                 size: CGSize(width: trunkWidth, height: trunkHeight))
-        trunk.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        trunk.position = .zero
-        container.addChild(trunk)
-
-        // 3 stacked triangular layers built as rotated rectangles
-        let layerSizes: [(width: CGFloat, height: CGFloat, yOffset: CGFloat)] = [
-            (isWartime ? 18 : 30, isWartime ? 10 : 18, trunkHeight * 0.35),  // bottom foliage layer
-            (isWartime ? 14 : 24, isWartime ? 9 : 16, trunkHeight * 0.55),  // middle foliage layer
-            (isWartime ? 10 : 16, isWartime ? 8 : 14, trunkHeight * 0.75)   // top foliage layer
-        ]
-
-        for info in layerSizes {
-            let layer = SKSpriteNode(color: pineGreen,
-                                     size: CGSize(width: info.width, height: info.height))
-            layer.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-            layer.position = CGPoint(x: 0, y: info.yOffset)
-            container.addChild(layer)
-
-            let sideW: CGFloat = info.width * 0.35
-            let sideH: CGFloat = info.height * 0.6
-
-            let leftSide = SKSpriteNode(color: pineGreen,
-                                        size: CGSize(width: sideW, height: sideH))
-            leftSide.anchorPoint = CGPoint(x: 1.0, y: 0.0)
-            leftSide.position = CGPoint(x: -info.width * 0.15, y: info.yOffset)
-            leftSide.zRotation = .pi / 8
-            container.addChild(leftSide)
-
-            let rightSide = SKSpriteNode(color: pineGreen,
-                                         size: CGSize(width: sideW, height: sideH))
-            rightSide.anchorPoint = CGPoint(x: 0.0, y: 0.0)
-            rightSide.position = CGPoint(x: info.width * 0.15, y: info.yOffset)
-            rightSide.zRotation = -.pi / 8
-            container.addChild(rightSide)
+        let tex = SKTexture(imageNamed: "tree-pine")
+        tex.filteringMode = .nearest
+        
+        let tree = SKSpriteNode(texture: tex)
+        tree.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        tree.position = .zero
+        
+        if isWartime {
+            // Tint tree to look burnt/dark
+            tree.color = SKColor(red: 0.12, green: 0.11, blue: 0.10, alpha: 1.0)
+            tree.colorBlendFactor = 0.85
         }
+        
+        container.addChild(tree)
     }
 
     // MARK: Bush
 
     private func buildBush(in container: SKNode, isWartime: Bool) {
-        let bushWidth:  CGFloat = CGFloat.random(in: 30...50)
-        let bushHeight: CGFloat = CGFloat.random(in: 15...25)
-        let bushColor = isWartime ? SKColor(red: 0.15, green: 0.13, blue: 0.12, alpha: 1.0) : SKColor(red: 0.22, green: 0.38, blue: 0.18, alpha: 1.0)
-
-        let body = SKSpriteNode(color: bushColor,
-                                size: CGSize(width: bushWidth, height: bushHeight))
-        body.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        body.position = .zero
-        container.addChild(body)
-
-        let bumpWidth:  CGFloat = bushWidth * 0.6
-        let bumpHeight: CGFloat = bushHeight * 0.5
-
-        let bump = SKSpriteNode(color: bushColor,
-                                size: CGSize(width: bumpWidth, height: bumpHeight))
-        bump.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        bump.position = CGPoint(x: 0, y: bushHeight - 2)
-        container.addChild(bump)
+        let tex = SKTexture(imageNamed: "bush-small")
+        tex.filteringMode = .nearest
+        
+        let bush = SKSpriteNode(texture: tex)
+        bush.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        bush.position = .zero
+        
+        if isWartime {
+            bush.color = SKColor(red: 0.15, green: 0.13, blue: 0.12, alpha: 1.0)
+            bush.colorBlendFactor = 0.8
+        }
+        
+        container.addChild(bush)
     }
 
     // MARK: Telegraph Pole
 
     private func buildTelegraphPole(in container: SKNode, chapter: Chapter) {
-        let poleWidth:  CGFloat = 6
-        let poleHeight: CGFloat = CGFloat.random(in: 80...120)
-        let woodColor = SKColor(red: 0.30, green: 0.22, blue: 0.12, alpha: 1.0)
-
-        let pole = SKSpriteNode(color: woodColor,
-                                size: CGSize(width: poleWidth, height: poleHeight))
+        let isWartime = (chapter == .jarocin || chapter == .kozmin)
+        let imageName = isWartime ? "telegraph-pole-broken" : "telegraph-pole"
+        
+        let poleTex = SKTexture(imageNamed: imageName)
+        poleTex.filteringMode = .nearest
+        
+        let pole = SKSpriteNode(texture: poleTex)
         pole.anchorPoint = CGPoint(x: 0.5, y: 0.0)
         pole.position = .zero
         container.addChild(pole)
-
-        let crossarmWidth:  CGFloat = CGFloat.random(in: 40...60)
-        let crossarmHeight: CGFloat = 5.0
-
-        let crossarm = SKSpriteNode(color: woodColor,
-                                    size: CGSize(width: crossarmWidth, height: crossarmHeight))
-        crossarm.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        crossarm.position = CGPoint(x: 0, y: poleHeight - 8)
-        container.addChild(crossarm)
-
-        let cableColor = SKColor(red: 0.08, green: 0.08, blue: 0.08, alpha: 0.7)
-        let cable = SKSpriteNode(color: cableColor,
-                                 size: CGSize(width: 100, height: 2))
-        cable.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        cable.position = CGPoint(x: 0, y: poleHeight - 12)
-        cable.zRotation = CGFloat.random(in: -0.06...0.06)
-        container.addChild(cable)
+        
+        let poleHeight = pole.size.height
 
         // Add climbing vines in Konin
         if chapter == .konin {
@@ -403,47 +340,23 @@ final class EnvironmentNode: SKNode {
     // MARK: Farmhouse Silhouette
 
     private func buildFarmhouse(in container: SKNode, isWartime: Bool, chapter: Chapter) {
-        let bodyWidth:  CGFloat = CGFloat.random(in: 40...60)
-        let bodyHeight: CGFloat = CGFloat.random(in: 25...35)
+        let isDamaged = (chapter == .jarocin || chapter == .kozmin)
+        let imageName = isDamaged ? "farmhouse-damaged" : "farmhouse-polish"
         
-        let houseColor: SKColor
-        let roofColor: SKColor
+        let tex = SKTexture(imageNamed: imageName)
+        tex.filteringMode = .nearest
         
-        if isWartime {
-            houseColor = SKColor(red: 0.08, green: 0.07, blue: 0.06, alpha: 1.0)
-            roofColor = SKColor(red: 0.06, green: 0.05, blue: 0.04, alpha: 1.0)
-        } else if chapter == .kozmin {
-            houseColor = SKColor(red: 0.10, green: 0.09, blue: 0.08, alpha: 1.0)
-            roofColor = SKColor(red: 0.17, green: 0.20, blue: 0.24, alpha: 1.0) // slate blue roof
-        } else if chapter == .konin {
-            houseColor = SKColor(red: 0.14, green: 0.12, blue: 0.10, alpha: 1.0)
-            roofColor = SKColor(red: 0.80, green: 0.35, blue: 0.25, alpha: 1.0) // terracotta roof
-        } else {
-            houseColor = SKColor(red: 0.12, green: 0.10, blue: 0.08, alpha: 1.0)
-            roofColor = SKColor(red: 0.65, green: 0.20, blue: 0.15, alpha: 1.0) // standard red roof
+        let house = SKSpriteNode(texture: tex)
+        house.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        house.position = .zero
+        
+        if isDamaged {
+            // Apply burnt color overlay
+            house.color = SKColor(red: 0.25, green: 0.22, blue: 0.20, alpha: 1.0)
+            house.colorBlendFactor = 0.55
         }
-
-        let body = SKSpriteNode(color: houseColor,
-                                size: CGSize(width: bodyWidth, height: bodyHeight))
-        body.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        body.position = .zero
-        container.addChild(body)
-
-        let roofWidth:  CGFloat = bodyWidth + 6
-        let roofHeight: CGFloat = bodyHeight * 0.35
-
-        let roof = SKSpriteNode(color: roofColor,
-                                size: CGSize(width: roofWidth, height: roofHeight))
-        roof.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        roof.position = CGPoint(x: 0, y: bodyHeight)
-        container.addChild(roof)
-
-        if isWartime {
-            let chimney = SKSpriteNode(color: roofColor, size: CGSize(width: 6, height: 10))
-            chimney.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-            chimney.position = CGPoint(x: bodyWidth * 0.25, y: bodyHeight)
-            container.addChild(chimney)
-        }
+        
+        container.addChild(house)
     }
 
     // MARK: Wrecked Tank
@@ -530,62 +443,16 @@ final class EnvironmentNode: SKNode {
     // MARK: Flowering Bush
 
     private func buildFloweringBush(in container: SKNode) {
-        let bushWidth:  CGFloat = CGFloat.random(in: 32...48)
-        let bushHeight: CGFloat = CGFloat.random(in: 16...24)
-        let bushColor = SKColor(red: 0.22, green: 0.44, blue: 0.20, alpha: 1.0)
-
-        let body = SKSpriteNode(color: bushColor, size: CGSize(width: bushWidth, height: bushHeight))
-        body.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        body.position = .zero
-        container.addChild(body)
-
-        let bump = SKSpriteNode(color: bushColor, size: CGSize(width: bushWidth * 0.6, height: bushHeight * 0.5))
-        bump.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        bump.position = CGPoint(x: 0, y: bushHeight - 2)
-        container.addChild(bump)
-
-        let flowerColors = [
-            SKColor(red: 0.98, green: 0.85, blue: 0.35, alpha: 0.95), // yellow
-            SKColor(red: 0.98, green: 0.55, blue: 0.70, alpha: 0.95)  // pink
-        ]
-
-        for i in 0..<5 {
-            let color = flowerColors.randomElement()!
-            let dot = SKSpriteNode(color: color, size: CGSize(width: 3, height: 3))
-            let rx = CGFloat((i - 2)) * (bushWidth * 0.16) + CGFloat.random(in: -3...3)
-            let ry = CGFloat.random(in: 4...16)
-            dot.position = CGPoint(x: rx, y: ry)
-            container.addChild(dot)
-        }
+        let tex = SKTexture(imageNamed: "bush-flower")
+        tex.filteringMode = .nearest
+        
+        let bush = SKSpriteNode(texture: tex)
+        bush.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        bush.position = .zero
+        container.addChild(bush)
     }
 
     // MARK: Cherry Blossom Tree
 
-    private func buildCherryBlossomTree(in container: SKNode) {
-        let trunkWidth:  CGFloat = 8
-        let trunkHeight: CGFloat = CGFloat.random(in: 42...55)
-        let trunkColor = SKColor(red: 0.36, green: 0.25, blue: 0.15, alpha: 1.0)
-
-        let trunk = SKSpriteNode(color: trunkColor, size: CGSize(width: trunkWidth, height: trunkHeight))
-        trunk.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        trunk.position = .zero
-        container.addChild(trunk)
-
-        let crownColor = SKColor(red: 0.98, green: 0.65, blue: 0.74, alpha: 1.0)
-        let shadowColor = SKColor(red: 0.92, green: 0.50, blue: 0.62, alpha: 1.0)
-
-        let crownWidth:  CGFloat = CGFloat.random(in: 38...48)
-        let crownHeight: CGFloat = CGFloat.random(in: 32...42)
-
-        let shadowCrown = SKSpriteNode(color: shadowColor, size: CGSize(width: crownWidth, height: crownHeight))
-        shadowCrown.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        shadowCrown.position = CGPoint(x: 0, y: trunkHeight - 6)
-        container.addChild(shadowCrown)
-
-        let mainCrown = SKSpriteNode(color: crownColor, size: CGSize(width: crownWidth * 0.85, height: crownHeight * 0.85))
-        mainCrown.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        mainCrown.position = CGPoint(x: 2, y: trunkHeight - 2)
-        container.addChild(mainCrown)
-    }
 }
 

@@ -16,6 +16,7 @@ final class GameDirector {
     var activeChapter: Chapter = .krotoszyn
     var coalPercentage: Double = 100.0
     var distanceTravelled: Double = 0.0
+    var hudOpacity: Double = 1.0
     
     let audio = SynthAudioEngine.shared
     
@@ -57,6 +58,7 @@ final class GameDirector {
             activeChapter = chapter
             coalPercentage = 100.0
             distanceTravelled = 0.0
+            hudOpacity = 0.0
             audio.setChapter(chapter)
             if chapter == .krotoszyn {
                 audio.stopIntroJohn(duration: 4.0)
@@ -69,11 +71,11 @@ final class GameDirector {
             audio.setAmbienceActive(false)
         case .ending:
             audio.setChapter(.zolkiew)
-            audio.setAmbienceActive(false)
+            audio.stopTrainSound()
             audio.setSpeedRatio(0.0)
         case .credits:
             audio.setChapter(.zolkiew)
-            audio.setAmbienceActive(false)
+            audio.stopTrainSound()
             audio.setSpeedRatio(0.0)
         }
     }

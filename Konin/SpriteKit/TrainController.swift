@@ -5,6 +5,7 @@
 
 import Foundation
 import SpriteKit
+import SwiftUI
 
 final class TrainController {
     weak var scene: GameScene?
@@ -109,8 +110,17 @@ final class TrainController {
             }
         } else if chapter == .zolkiew && speed <= 0.1 && !hasTriggeredEnding {
             hasTriggeredEnding = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
-                GameDirector.shared.completeChapter(.zolkiew)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) { [weak self] in
+                guard let self = self else { return }
+                
+                // Fade out the SwiftUI HUD overlay alongside the SpriteKit scene
+                withAnimation(.easeInOut(duration: 4.0)) {
+                    GameDirector.shared.hudOpacity = 0.0
+                }
+                
+                self.scene?.triggerFinalWhiteFade(duration: 4.0) {
+                    GameDirector.shared.completeChapter(.zolkiew)
+                }
             }
         }
         

@@ -25,10 +25,10 @@ struct LoadingView: View {
     
     // Cached once at view initialization
     private let backgroundImage: Image // loading-menu-2
-    private let slideInImage: Image?   // loading-menu-image-1
+    private let slideInImage: Image?   // loading-1
     
     init() {
-        if let url = Bundle.main.url(forResource: "loading-menu-2", withExtension: "png"),
+        if let url = Bundle.main.url(forResource: "loading-1", withExtension: "png"),
            let nsImage = NSImage(contentsOf: url) {
             self.backgroundImage = Image(nsImage: nsImage)
         } else {
@@ -49,6 +49,7 @@ struct LoadingView: View {
                 // 1. FULL-SCREEN BACKGROUND IMAGE (scales up subtly)
                 backgroundImage
                     .resizable()
+                    .interpolation(.none)
                     .scaledToFill()
                     .frame(width: windowGeo.size.width, height: windowGeo.size.height)
                     .scaleEffect(bgScale)
@@ -58,6 +59,7 @@ struct LoadingView: View {
                 if let slideImage = slideInImage {
                     slideImage
                         .resizable()
+                        .interpolation(.none)
                         .scaledToFill()
                         .frame(width: windowGeo.size.width, height: windowGeo.size.height)
                         .scaleEffect(slideScale)
@@ -145,7 +147,7 @@ struct LoadingView: View {
                             )
                             .frame(width: 826)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                            .padding(.bottom, 140)
+                            .padding(.bottom, 40)
                             .transition(.opacity)
                     }
                     

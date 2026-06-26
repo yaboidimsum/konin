@@ -39,6 +39,7 @@ struct MainMenuView: View {
                 // 1. FULL-SCREEN BACKGROUND IMAGE (Read from memory, no disk IO on redraw)
                 backgroundImage
                     .resizable()
+                    .interpolation(.none)
                     .scaledToFill()
                     .frame(width: windowGeo.size.width, height: windowGeo.size.height)
                     .clipped()

@@ -81,24 +81,6 @@ final class AirRaidController {
         if activeAttack {
             attackTimer += deltaTime
             
-            // Blink warning label frantic speed
-            if let warning = warningNode {
-                let blink = sin(Date().timeIntervalSince1970 * 24.0) > 0.0
-                warning.isHidden = !blink
-            }
-            
-            // Show warning banner immediately when the air raid starts
-            if warningNode == nil {
-                let warning = SKLabelNode(text: "⚠ LUFTWAFFE DETECTED - TAKE COVER [S / DOWN] ⚠")
-                warning.fontName = "Helvetica-Bold"
-                warning.fontSize = 20
-                warning.fontColor = .red
-                warning.position = CGPoint(x: scene.size.width / 2, y: scene.size.height - 200)
-                warning.zPosition = 8.0
-                scene.addChild(warning)
-                warningNode = warning
-            }
-            
             // Update each active plane
             for plane in activePlanes {
                 let localTimer = (attackTimer - warningDelay) - plane.startDelay

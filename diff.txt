@@ -1,0 +1,400 @@
+diff --git a/Konin/SpriteKit/GameScene.swift b/Konin/SpriteKit/GameScene.swift
+index ad35337..d6e09a7 100644
+--- a/Konin/SpriteKit/GameScene.swift
++++ b/Konin/SpriteKit/GameScene.swift
+@@ -964,6 +964,11 @@ final class GameScene: SKScene {
+ 
+     
+     private func applyChapterStyling(_ chapter: Chapter) {
++        // Setup chapter-specific environmental effects (weather, sky animations, ground fog)
++        setupWeatherEmitter(for: chapter)
++        setupSkyClouds(for: chapter)
++        setupGroundFog(for: chapter)
++        
+         // Toggle city silhouette visibility based on active chapter (Krotoszyn is the first city)
+         if chapter == .krotoszyn {
+             citySilhouette?.isHidden = false
+@@ -986,6 +991,37 @@ final class GameScene: SKScene {
+             rebuildCitySkylines(for: chapter)
+         }
+         
++        // Mountain & Hill layers styling
++        if chapter == .tunnel || chapter == .zolkiew {
++            farMountainNode?.isHidden = true
++            midHillNode?.isHidden = true
++            horizonHazeNode?.isHidden = true
++        } else {
++            farMountainNode?.isHidden = false
++            midHillNode?.isHidden = false
++            horizonHazeNode?.isHidden = false
++            
++            // Set haze base tint
++            horizonHazeNode?.colorBlendFactor = 1.0
++            farMountainNode?.colorBlendFactor = 1.0
++            midHillNode?.colorBlendFactor = 1.0
++        }
++        
++        // Crepuscular rays, Searchlights, and Spotlight
++        if chapter == .konin {
++            setupCrepuscularRays()
++        } else {
++            childNode(withName: "crepuscularRays")?.removeFromParent()
++        }
++        
++        if chapter == .jarocin {
++            setupWartimeSearchlights()
++            setupJarocinSpotlight()
++        } else {
++            childNode(withName: "wartimeSearchlights")?.removeFromParent()
++            childNode(withName: "jarocinSpotlight")?.removeFromParent()
++        }
++        
+         updateWartimeSky(isWartime: (chapter == .jarocin))
+         
+         // Reset texture to nil so fallback to solid colors works for other chapters
+@@ -1001,6 +1037,11 @@ final class GameScene: SKScene {
+             tunnelDarkness.alpha = 0.0
+             headlightBeam.alpha = 0.0
+             updateRailsColor(.lightGray)
++            
++            horizonHazeNode?.color = SKColor(red: 13.0/255.0, green: 73.0/255.0, blue: 105.0/255.0, alpha: 1.0)
++            farMountainNode?.color = SKColor(red: 0.15, green: 0.22, blue: 0.32, alpha: 1.0)
++            midHillNode?.color = SKColor(red: 0.18, green: 0.30, blue: 0.22, alpha: 1.0)
++            
+         case .kozmin:
+             // Stormy Grey (Foggy green-grey bottom to Deep navy-charcoal top)
+             let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
+@@ -1015,8 +1056,13 @@ final class GameScene: SKScene {
+             groundNode.color = SKColor(red: 0.22, green: 0.2, blue: 0.18, alpha: 1.0)
+             horizonLine.color = SKColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+             tunnelDarkness.alpha = 0.0
+-            headlightBeam.alpha = 0.0
++            headlightBeam.alpha = 0.2 // Headlight on during stormy night!
+             updateRailsColor(.gray)
++            
++            horizonHazeNode?.color = bottomColor
++            farMountainNode?.color = SKColor(red: 0.08, green: 0.10, blue: 0.13, alpha: 1.0)
++            midHillNode?.color = SKColor(red: 0.06, green: 0.12, blue: 0.10, alpha: 1.0)
++            
+         case .jarocin:
+             // wartime desaturated gradient fading from orange (bottom) to grey (top) (background-2 reference)
+             let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
+@@ -1031,16 +1077,22 @@ final class GameScene: SKScene {
+             groundNode.color = SKColor(red: 0.50, green: 0.48, blue: 0.46, alpha: 1.0)
+             horizonLine.color = SKColor(red: 0.18, green: 0.17, blue: 0.16, alpha: 1.0)
+             tunnelDarkness.alpha = 0.0
+-            headlightBeam.alpha = 0.0
++            headlightBeam.alpha = 0.15 // Headlight on during wartime night!
+             updateRailsColor(.gray)
++            
++            horizonHazeNode?.color = bottomColor
++            farMountainNode?.color = SKColor(red: 0.14, green: 0.13, blue: 0.12, alpha: 1.0)
++            midHillNode?.color = SKColor(red: 0.10, green: 0.09, blue: 0.08, alpha: 1.0)
++            
+         case .tunnel:
+             // Dimmed/Black
+             skyNode.color = .black
+             groundNode.color = SKColor(white: 0.05, alpha: 1.0)
+             horizonLine.color = SKColor(white: 0.02, alpha: 1.0)
+             tunnelDarkness.alpha = 0.85
+-            headlightBeam.alpha = 0.25
++            headlightBeam.alpha = 0.3 // Stronger headlight beam in the tunnel
+             updateRailsColor(.darkGray)
++            
+         case .konin:
+             // Dreamy sunrise (Peach bottom to Pastel Blue top)
+             let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
+@@ -1058,6 +1110,10 @@ final class GameScene: SKScene {
+             headlightBeam.alpha = 0.0
+             updateRailsColor(SKColor(red: 0.95, green: 0.85, blue: 0.55, alpha: 1.0))
+             
++            horizonHazeNode?.color = bottomColor
++            farMountainNode?.color = SKColor(red: 0.30, green: 0.25, blue: 0.35, alpha: 1.0)
++            midHillNode?.color = SKColor(red: 0.40, green: 0.30, blue: 0.35, alpha: 1.0)
++            
+             // Dreamy floaty particle effect
+             spawnDreamParticles()
+         case .zolkiew:
+@@ -1080,28 +1136,266 @@ final class GameScene: SKScene {
+         }
+     }
+     
+-    private func spawnDreamParticles() {
+-        let emitter = SKEmitterNode()
+-        emitter.position = CGPoint(x: size.width / 2, y: horizonY + 80)
+-        emitter.zPosition = 2.0
++    private func setupWeatherEmitter(for chapter: Chapter) {
++        childNode(withName: "weatherEmitter")?.removeFromParent()
+         
+-        emitter.particleBirthRate = 8
+-        emitter.particleLifetime = 4.0
+-        emitter.particleLifetimeRange = 1.0
++        let emitter = SKEmitterNode()
++        emitter.name = "weatherEmitter"
++        emitter.zPosition = 3.8 // in front of fog, behind cabin
+         
+-        emitter.particleSpeed = 25
+-        emitter.particleSpeedRange = 10
+-        emitter.emissionAngle = .pi / 2
+-        emitter.emissionAngleRange = .pi
++        switch chapter {
++        case .krotoszyn:
++            // Drifting leaves / pollen (yellow-green soft particles)
++            emitter.position = CGPoint(x: size.width / 2, y: size.height + 20)
++            emitter.particleBirthRate = 5
++            emitter.particleLifetime = 7.0
++            emitter.particleLifetimeRange = 2.0
++            emitter.particleSpeed = 40
++            emitter.particleSpeedRange = 15
++            emitter.emissionAngle = -.pi * 0.6 // falling down and slightly left
++            emitter.emissionAngleRange = .pi / 4
++            emitter.particleColor = SKColor(red: 0.5, green: 0.7, blue: 0.3, alpha: 0.6)
++            emitter.particleColorAlphaSpeed = -0.08
++            emitter.particleScale = 0.05
++            emitter.particleScaleRange = 0.03
++            
++        case .kozmin:
++            // Heavy rain streaks
++            emitter.position = CGPoint(x: size.width / 2, y: size.height + 20)
++            emitter.particleBirthRate = 120
++            emitter.particleLifetime = 1.5
++            emitter.particleSpeed = 500
++            emitter.particleSpeedRange = 100
++            emitter.emissionAngle = -.pi / 2 - 0.08 // almost straight down
++            emitter.emissionAngleRange = 0.05
++            emitter.particleColor = SKColor(red: 0.75, green: 0.85, blue: 0.95, alpha: 0.5)
++            emitter.particleColorAlphaSpeed = -0.5
++            emitter.particleScale = 0.04
++            emitter.particleScaleRange = 0.02
++            
++        case .jarocin:
++            // Warzone ash & embers
++            emitter.position = CGPoint(x: size.width / 2, y: size.height + 20)
++            emitter.particleBirthRate = 25
++            emitter.particleLifetime = 4.0
++            emitter.particleLifetimeRange = 1.5
++            emitter.particleSpeed = 80
++            emitter.particleSpeedRange = 30
++            emitter.emissionAngle = -.pi * 0.55
++            emitter.emissionAngleRange = .pi / 3
++            
++            emitter.particleColor = SKColor(red: 0.9, green: 0.4, blue: 0.1, alpha: 0.8)
++            emitter.particleColorRedRange = 0.2
++            emitter.particleColorGreenRange = 0.2
++            emitter.particleColorBlueRange = 0.1
++            emitter.particleColorAlphaSpeed = -0.2
++            emitter.particleScale = 0.06
++            emitter.particleScaleRange = 0.04
++            
++        case .tunnel:
++            // Soot/dust motes floating slowly inside the tunnel
++            emitter.position = CGPoint(x: size.width / 2, y: horizonY + 80)
++            emitter.particleBirthRate = 6
++            emitter.particleLifetime = 3.5
++            emitter.particleLifetimeRange = 1.0
++            emitter.particleSpeed = 20
++            emitter.particleSpeedRange = 10
++            emitter.emissionAngle = .pi / 2
++            emitter.emissionAngleRange = .pi * 2
++            emitter.particleColor = SKColor(red: 0.25, green: 0.22, blue: 0.20, alpha: 0.4)
++            emitter.particleColorAlphaSpeed = -0.1
++            emitter.particleScale = 0.03
++            emitter.particleScaleRange = 0.02
++            
++        case .konin:
++            // Dreamy floaty particles (peach and white)
++            emitter.position = CGPoint(x: size.width / 2, y: horizonY + 80)
++            emitter.particleBirthRate = 8
++            emitter.particleLifetime = 4.0
++            emitter.particleLifetimeRange = 1.0
++            emitter.particleSpeed = 25
++            emitter.particleSpeedRange = 10
++            emitter.emissionAngle = .pi / 2
++            emitter.emissionAngleRange = .pi
++            emitter.particleColor = SKColor.white
++            emitter.particleColorAlphaSpeed = -0.2
++            emitter.particleScale = 0.04
++            emitter.particleScaleRange = 0.03
++            
++        case .zolkiew:
++            // Soft peaceful petals
++            emitter.position = CGPoint(x: size.width / 2, y: size.height + 20)
++            emitter.particleBirthRate = 6
++            emitter.particleLifetime = 6.0
++            emitter.particleLifetimeRange = 1.5
++            emitter.particleSpeed = 35
++            emitter.particleSpeedRange = 15
++            emitter.emissionAngle = -.pi * 0.5
++            emitter.emissionAngleRange = .pi / 4
++            emitter.particleColor = SKColor(red: 0.98, green: 0.75, blue: 0.85, alpha: 0.75) // pink petals
++            emitter.particleColorAlphaSpeed = -0.1
++            emitter.particleScale = 0.06
++            emitter.particleScaleRange = 0.04
++        }
+         
+-        emitter.particleColor = .white
+-        emitter.particleColorAlphaSpeed = -0.2
+-        emitter.particleScale = 0.04
+-        emitter.particleScaleRange = 0.03
+-        emitter.particleScaleSpeed = 0.02
++        if let tex = createCircleTexture(radius: 4.0) {
++            emitter.particleTexture = tex
++        }
+         
+         addChild(emitter)
+     }
++
++    private func createCircleTexture(radius: CGFloat) -> SKTexture? {
++        let size = Int(radius * 2)
++        guard let context = CGContext(data: nil, width: size, height: size,
++                                      bitsPerComponent: 8, bytesPerRow: 0,
++                                      space: CGColorSpaceCreateDeviceRGB(),
++                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
++            return nil
++        }
++        
++        context.clear(CGRect(x: 0, y: 0, width: size, height: size))
++        context.setFillColor(SKColor.white.cgColor)
++        context.fillEllipse(in: CGRect(x: 0, y: 0, width: size, height: size))
++        
++        guard let cgImage = context.makeImage() else { return nil }
++        return SKTexture(cgImage: cgImage)
++    }
++
++    private func setupSkyClouds(for chapter: Chapter) {
++        childNode(withName: "skyClouds")?.removeFromParent()
++        
++        if chapter == .tunnel || chapter == .zolkiew { return }
++        
++        let container = SKNode()
++        container.name = "skyClouds"
++        addChild(container)
++        
++        let colors: [SKColor]
++        let heights: [CGFloat]
++        let yOffsets: [CGFloat]
++        let speeds: [Double]
++        
++        switch chapter {
++        case .krotoszyn:
++            colors = [
++                SKColor(white: 1.0, alpha: 0.15),
++                SKColor(white: 1.0, alpha: 0.20),
++                SKColor(white: 1.0, alpha: 0.10)
++            ]
++            heights = [15, 25, 20]
++            yOffsets = [20, 70, 120]
++            speeds = [45.0, 30.0, 55.0]
++        case .kozmin:
++            colors = [
++                SKColor(red: 0.20, green: 0.22, blue: 0.25, alpha: 0.4),
++                SKColor(red: 0.15, green: 0.17, blue: 0.20, alpha: 0.5),
++                SKColor(red: 0.25, green: 0.27, blue: 0.30, alpha: 0.3)
++            ]
++            heights = [20, 35, 25]
++            yOffsets = [15, 55, 95]
++            speeds = [18.0, 15.0, 22.0]
++        case .jarocin:
++            colors = [
++                SKColor(red: 0.12, green: 0.11, blue: 0.10, alpha: 0.6),
++                SKColor(red: 0.22, green: 0.20, blue: 0.18, alpha: 0.4),
++                SKColor(red: 0.18, green: 0.16, blue: 0.15, alpha: 0.5)
++            ]
++            heights = [18, 30, 22]
++            yOffsets = [10, 45, 85]
++            speeds = [35.0, 25.0, 40.0]
++        case .konin:
++            colors = [
++                SKColor(red: 0.98, green: 0.90, blue: 0.80, alpha: 0.25),
++                SKColor(red: 0.95, green: 0.85, blue: 0.75, alpha: 0.35),
++                SKColor(red: 0.90, green: 0.80, blue: 0.70, alpha: 0.20)
++            ]
++            heights = [12, 22, 16]
++            yOffsets = [25, 65, 105]
++            speeds = [60.0, 48.0, 75.0]
++        default:
++            return
++        }
++        
++        for i in 0..<3 {
++            let strip = SKSpriteNode(color: colors[i], size: CGSize(width: size.width * 3.0, height: heights[i]))
++            strip.anchorPoint = CGPoint(x: 0.5, y: 0.0)
++            strip.position = CGPoint(x: size.width / 2 - size.width * 0.5, y: horizonY + yOffsets[i])
++            strip.zPosition = 0.01
++            container.addChild(strip)
++            
++            let moveLeft = SKAction.moveBy(x: -size.width, y: 0, duration: speeds[i])
++            let reset = SKAction.moveBy(x: size.width, y: 0, duration: 0.0)
++            strip.run(SKAction.repeatForever(SKAction.sequence([moveLeft, reset])))
++        }
++    }
++
++    private func setupGroundFog(for chapter: Chapter) {
++        childNode(withName: "groundFog")?.removeFromParent()
++        
++        guard chapter == .kozmin || chapter == .jarocin else { return }
++        
++        let container = SKNode()
++        container.name = "groundFog"
++        container.zPosition = 3.6
++        addChild(container)
++        
++        let fogColor = (chapter == .kozmin) ? SKColor(red: 0.8, green: 0.82, blue: 0.8, alpha: 0.12) : SKColor(red: 0.3, green: 0.28, blue: 0.26, alpha: 0.15)
++        
++        let yPositions: [CGFloat] = [190, 220, 250]
++        let speeds: [Double] = [12.0, 18.0, 15.0]
++        let scales: [CGFloat] = [1.2, 0.8, 0.5]
++        
++        for i in 0..<3 {
++            let fog = SKSpriteNode(color: fogColor, size: CGSize(width: size.width * 2.5, height: 40 * scales[i]))
++            fog.anchorPoint = CGPoint(x: 0.5, y: 0.5)
++            fog.position = CGPoint(x: size.width / 2 - size.width * 0.5, y: yPositions[i])
++            container.addChild(fog)
++            
++            let moveRight = SKAction.moveBy(x: size.width, y: 0, duration: speeds[i])
++            let reset = SKAction.moveBy(x: -size.width, y: 0, duration: 0.0)
++            fog.run(SKAction.repeatForever(SKAction.sequence([moveRight, reset])))
++        }
++    }
++
++    private func setupJarocinSpotlight() {
++        if childNode(withName: "jarocinSpotlight") != nil { return }
++        
++        let spotlightNode = SKNode()
++        spotlightNode.name = "jarocinSpotlight"
++        addChild(spotlightNode)
++        
++        let glowSize = CGSize(width: 140, height: 60)
++        let groundGlow = SKSpriteNode(color: SKColor(red: 1.0, green: 0.95, blue: 0.8, alpha: 0.35), size: glowSize)
++        groundGlow.name = "groundGlow"
++        groundGlow.zPosition = 0.55
++        groundGlow.blendMode = .add
++        spotlightNode.addChild(groundGlow)
++        
++        let beamSize = CGSize(width: 80, height: size.height)
++        if let beamTex = createSearchlightBeamTexture(size: beamSize) {
++            let beam = SKSpriteNode(texture: beamTex)
++            beam.name = "beam"
++            beam.anchorPoint = CGPoint(x: 0.5, y: 1.0)
++            beam.zPosition = 0.54
++            beam.blendMode = .add
++            beam.alpha = 0.2
++            beam.zRotation = .pi
++            spotlightNode.addChild(beam)
++        }
++        
++        spotlightNode.position = CGPoint(x: size.width / 2, y: 220)
++        
++        let sweepLeft = SKAction.moveTo(x: size.width * 0.15, duration: 4.0)
++        sweepLeft.timingMode = .easeInEaseOut
++        let sweepRight = SKAction.moveTo(x: size.width * 0.85, duration: 4.5)
++        sweepRight.timingMode = .easeInEaseOut
++        let sweepCenter = SKAction.moveTo(x: size.width / 2, duration: 3.5)
++        sweepCenter.timingMode = .easeInEaseOut
++        
++        let seq = SKAction.sequence([sweepLeft, sweepRight, sweepCenter])
++        spotlightNode.run(SKAction.repeatForever(seq))
++    }
+     
+     func triggerFurnaceFlash() {
+         // Flare furnace fire size/intensity

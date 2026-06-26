@@ -138,7 +138,7 @@ final class HazardManager {
         hazard.lane = lane
         hazard.progress = 0.0
         
-        let variant = Int.random(in: 0...2)
+        let variant = Int.random(in: 0...3)
         hazard.variant = variant
         
         switch variant {
@@ -225,7 +225,7 @@ final class HazardManager {
             glowNode.zPosition = 0.4
             hazard.addChild(glowNode)
             
-        default:
+        case 2:
             // --- VARIANT 2: German Stockmine 43 (Stake/Concrete style) ---
             // 1. Wooden stake driven into ground
             let stake = SKSpriteNode(color: SKColor(red: 0.36, green: 0.25, blue: 0.20, alpha: 1.0), size: CGSize(width: 4, height: 24))
@@ -257,6 +257,48 @@ final class HazardManager {
             glowNode.position = CGPoint(x: 0, y: 4)
             glowNode.zPosition = 0.4
             hazard.addChild(glowNode)
+            
+        default:
+            // --- VARIANT 3: Snapped/Broken Rail ---
+            // 1. Broken wooden sleeper
+            let brokenSleeper = SKSpriteNode(color: SKColor(red: 0.36, green: 0.25, blue: 0.20, alpha: 1.0), size: CGSize(width: 48, height: 10))
+            brokenSleeper.position = CGPoint(x: 0, y: -12)
+            brokenSleeper.zPosition = 0.1
+            brokenSleeper.zRotation = 0.15
+            hazard.addChild(brokenSleeper)
+            
+            // 2. Snapped rail left (vertical grey block, tilted)
+            let leftRail = SKSpriteNode(color: SKColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1.0), size: CGSize(width: 6, height: 16))
+            leftRail.position = CGPoint(x: -16, y: -4)
+            leftRail.zPosition = 0.2
+            leftRail.zRotation = -0.4
+            hazard.addChild(leftRail)
+            
+            // 3. Snapped rail right
+            let rightRail = SKSpriteNode(color: SKColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1.0), size: CGSize(width: 6, height: 18))
+            rightRail.position = CGPoint(x: 16, y: -2)
+            rightRail.zPosition = 0.2
+            rightRail.zRotation = 0.35
+            hazard.addChild(rightRail)
+            
+            // 4. Red Warning Lantern/Flag on a small stake
+            let stake = SKSpriteNode(color: SKColor(red: 0.3, green: 0.2, blue: 0.1, alpha: 1.0), size: CGSize(width: 3, height: 26))
+            stake.position = CGPoint(x: -6, y: 0)
+            stake.zPosition = 0.15
+            stake.zRotation = -0.1
+            hazard.addChild(stake)
+            
+            let lantern = SKSpriteNode(color: SKColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0), size: CGSize(width: 8, height: 10))
+            lantern.position = CGPoint(x: -6, y: 13)
+            lantern.zPosition = 0.3
+            hazard.addChild(lantern)
+            
+            // 5. Pulsing red indicator light on the lantern
+            let glowNode = SKSpriteNode(color: .red, size: CGSize(width: 4, height: 4))
+            glowNode.name = "indicator_light"
+            glowNode.position = CGPoint(x: -6, y: 13)
+            glowNode.zPosition = 0.4
+            hazard.addChild(glowNode)
         }
         
         scene.addChild(hazard)
@@ -275,6 +317,9 @@ final class HazardManager {
         case 0: // S2-mine (Medium)
             damage = -30.0
             shakeIntensity = 18.0
+        case 3: // Broken rail (Severe)
+            damage = -35.0
+            shakeIntensity = 20.0
         default: // Stockmine (Small)
             damage = -15.0
             shakeIntensity = 12.0

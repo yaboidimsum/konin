@@ -6,7 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7D2254202FEE70B900875D8B /* opencode-plan.md in Resources */ = {isa = PBXBuildFile; fileRef = 7D22541F2FEE70B000875D8B /* opencode-plan.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		7D22541F2FEE70B000875D8B /* opencode-plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "opencode-plan.md"; sourceTree = "<group>"; };
 		7D64955D2FEA19A700A80F32 /* Konin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Konin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -58,6 +63,7 @@
 			children = (
 				7D64955F2FEA19A700A80F32 /* Konin */,
 				7D64955E2FEA19A700A80F32 /* Products */,
+				7D22541F2FEE70B000875D8B /* opencode-plan.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -133,6 +139,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D2254202FEE70B900875D8B /* opencode-plan.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

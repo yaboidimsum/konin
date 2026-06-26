@@ -28,6 +28,11 @@ final class GameScene: SKScene {
                 if whiteTransitionOverlay != nil && activeChapter == .zolkiew {
                     whiteTransitionOverlay.run(SKAction.fadeOut(withDuration: 3.0))
                 }
+                DispatchQueue.main.async {
+                    withAnimation(.easeInOut(duration: 3.0)) {
+                        GameDirector.shared.hudOpacity = 1.0
+                    }
+                }
             } else {
                 if failOverlay != nil && activeChapter != .zolkiew {
                     failOverlay.removeAllActions()
@@ -36,6 +41,9 @@ final class GameScene: SKScene {
                 if whiteTransitionOverlay != nil && activeChapter == .zolkiew {
                     whiteTransitionOverlay.removeAllActions()
                     whiteTransitionOverlay.alpha = 1.0
+                }
+                DispatchQueue.main.async {
+                    GameDirector.shared.hudOpacity = 0.0
                 }
             }
         }
@@ -1499,8 +1507,19 @@ final class GameScene: SKScene {
             if progressRatio >= 0.90 {
                 let whiteProgress = (progressRatio - 0.90) / 0.10
                 whiteTransitionOverlay.alpha = min(1.0, CGFloat(whiteProgress))
+                let targetOpacity = max(0.0, 1.0 - Double(whiteProgress))
+                if GameDirector.shared.hudOpacity != targetOpacity {
+                    DispatchQueue.main.async {
+                        GameDirector.shared.hudOpacity = targetOpacity
+                    }
+                }
             } else {
                 whiteTransitionOverlay.alpha = 0.0
+                if GameDirector.shared.hudOpacity != 1.0 && !isFadingToFail {
+                    DispatchQueue.main.async {
+                        GameDirector.shared.hudOpacity = 1.0
+                    }
+                }
             }
             
             // Apply rail alphas — side tracks fade, center track stays at 1
@@ -1591,6 +1610,13 @@ final class GameScene: SKScene {
                 }
             }
         ]))
+        
+        // Fade the HUD out to black in sync with the scene
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 2.3)) {
+                GameDirector.shared.hudOpacity = 0.0
+            }
+        }
     }
     
     /// Fades the screen to black upon successful chapter completion before transitioning state
@@ -1611,6 +1637,34 @@ final class GameScene: SKScene {
                 }
             }
         ]))
+        
+        // Fade the HUD out to black in sync with the scene
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 1.8)) {
+                GameDirector.shared.hudOpacity = 0.0
+            }
+        }
+    }
+    
+    /// Fades the screen to white slowly at the end of the final chapter (Zolkiew)
+    func triggerFinalWhiteFade(duration: TimeInterval, completion: @escaping () -> Void) {
+        guard whiteTransitionOverlay != nil else {
+            completion()
+            return
+        }
+        whiteTransitionOverlay.removeAllActions()
+        whiteTransitionOverlay.alpha = 0.0
+        
+        let fadeToWhite = SKAction.fadeAlpha(to: 1.0, duration: duration)
+        fadeToWhite.timingMode = .easeInEaseOut
+        
+        let completeAction = SKAction.run {
+            DispatchQueue.main.async {
+                completion()
+            }
+        }
+        
+        whiteTransitionOverlay.run(SKAction.sequence([fadeToWhite, completeAction]))
     }
     
     private func updateFailFade(deltaTime: TimeInterval) {

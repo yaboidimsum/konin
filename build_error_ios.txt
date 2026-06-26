@@ -1,0 +1,14 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Konin.xcodeproj -scheme Konin -destination "platform=iOS Simulator,name=iPhone 16" build
+
+2026-06-26 15:38:17.900 xcodebuild[56921:2505323] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-06-26 15:39:18.356 xcodebuild[56921:2505323] Writing error result bundle to /var/folders/7n/5p6032s929g_d32n40jpphnh0000gn/T/ResultBundle_2026-26-06_15-39-0018.xcresult
+xcodebuild: error: Unable to find a device matching the provided destination specifier:
+		{ platform:iOS Simulator, OS:latest, name:iPhone 16 }
+
+	The requested device could not be found because no available devices matched the request.
+
+	Available destinations for the "Konin" scheme:
+		{ platform:macOS, arch:arm64, id:00008142-000611981E11401C, name:My Mac }
+		{ platform:macOS, arch:x86_64, id:00008142-000611981E11401C, name:My Mac }
+		{ platform:macOS, name:Any Mac }

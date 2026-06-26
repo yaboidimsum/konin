@@ -34,7 +34,7 @@ struct GameView: View {
             SpriteView(scene: scene, options: [.ignoresSiblingOrder])
                 .ignoresSafeArea()
             
-            // HUD Overlay for Coal, Distance, and Closed Captions
+            // 1. TOP HUD OVERLAY (Distance and Chapter info)
             VStack {
                 HStack {
                     // Left HUD: Active Chapter
@@ -71,8 +71,14 @@ struct GameView: View {
                 .padding()
                 
                 Spacer()
+            }
+            .allowsHitTesting(false) // Let mouse clicks go to SpriteKit scene
+            .opacity(director.hudOpacity)
+            
+            // 2. CLOSED CAPTIONS OVERLAY (positioned lower, overlaying the dashboard)
+            VStack {
+                Spacer()
                 
-                // Closed Caption dialogue box (yellow retro style)
                 if let caption = activeCaptionText {
                     Text(caption)
                         .font(.custom("VCR OSD Mono", size: 16))
@@ -93,8 +99,9 @@ struct GameView: View {
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
-            .padding(.bottom, 220) // Positioned directly above the dashboard HUD
+            .padding(.bottom, 220) // Lowered from 220 to 160 to sit on top of the dashboard background
             .allowsHitTesting(false) // Let mouse clicks go to SpriteKit scene
+            .opacity(director.hudOpacity)
             
             // TITLE CARD OVERLAY
             if showTitleCard {
