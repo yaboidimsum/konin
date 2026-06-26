@@ -19,7 +19,27 @@ final class GameScene: SKScene {
     var activeChapter: Chapter = .krotoszyn
     private var lastUpdateTime: TimeInterval = 0.0
     private var isConfigured = false
-    var isWaitingToStart = true
+    var isWaitingToStart = true {
+        didSet {
+            if !isWaitingToStart {
+                if failOverlay != nil && activeChapter != .zolkiew {
+                    failOverlay.run(SKAction.fadeOut(withDuration: 3.0))
+                }
+                if whiteTransitionOverlay != nil && activeChapter == .zolkiew {
+                    whiteTransitionOverlay.run(SKAction.fadeOut(withDuration: 3.0))
+                }
+            } else {
+                if failOverlay != nil && activeChapter != .zolkiew {
+                    failOverlay.removeAllActions()
+                    failOverlay.alpha = 1.0
+                }
+                if whiteTransitionOverlay != nil && activeChapter == .zolkiew {
+                    whiteTransitionOverlay.removeAllActions()
+                    whiteTransitionOverlay.alpha = 1.0
+                }
+            }
+        }
+    }
     
     // Background nodes
     private var skyNode: SKSpriteNode!
@@ -169,8 +189,8 @@ final class GameScene: SKScene {
         middleTrackAlpha = 1.0   // center track always visible now
         if whiteTransitionOverlay != nil {
             if chapter == .zolkiew {
+                whiteTransitionOverlay.removeAllActions()
                 whiteTransitionOverlay.alpha = 1.0
-                whiteTransitionOverlay.run(SKAction.fadeOut(withDuration: 3.0))
             } else {
                 whiteTransitionOverlay.alpha = 0.0
             }
@@ -182,9 +202,9 @@ final class GameScene: SKScene {
             if chapter == .zolkiew {
                 failOverlay.alpha = 0.0
             } else {
+                failOverlay.removeAllActions()
                 failOverlay.color = .black
                 failOverlay.alpha = 1.0
-                failOverlay.run(SKAction.fadeOut(withDuration: 1.8))
             }
         }
         
@@ -271,11 +291,11 @@ final class GameScene: SKScene {
         addChild(beam)
         headlightBeam = beam
         
-        // 6. Fail fade overlay (black, starts invisible, sits above everything)
+        // 6. Fail fade overlay (black, starts opaque to prevent flashes, sits above everything)
         failOverlay = SKSpriteNode(color: .black, size: CGSize(width: size.width * 2, height: size.height * 2))
         failOverlay.position = CGPoint(x: size.width / 2, y: size.height / 2)
         failOverlay.zPosition = 50.0
-        failOverlay.alpha = 0.0
+        failOverlay.alpha = 1.0
         addChild(failOverlay)
 
         // Scrolling environment (trees, telegraph poles, parallaxes)

@@ -13,8 +13,8 @@ struct GameView: View {
     // Store scene once in State as per SpriteKit best practice
     @State private var scene: GameScene
     
-    @State private var showTitleCard = false
-    @State private var titleCardOpacity = 0.0
+    @State private var showTitleCard = true
+    @State private var titleCardOpacity = 1.0
     @State private var titleTextOpacity = 0.0
     @State private var titleCardWorkId = 0
     

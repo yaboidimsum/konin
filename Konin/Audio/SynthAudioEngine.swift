@@ -21,6 +21,9 @@ final class SynthAudioEngine: @unchecked Sendable {
     private var honkPlayer: AVAudioPlayer?          // Horn.mp3
     private var menuPlayer: AVAudioPlayer?          // Medal of Honor Allied Assault theme (menu background music)
     private var krotoszynPlayer: AVAudioPlayer?     // Medal of Honor Allied Assault Lighting (Chapter 1 gameplay)
+    private var kozminPlayer: AVAudioPlayer?        // Medal of Honor Allied Assault Diverti (Chapter 2 gameplay)
+    private var tunnelPlayer: AVAudioPlayer?        // Medal of Honor Allied Assault Stadt (Chapter 4 gameplay)
+    private var windPlayer: AVAudioPlayer?          // YTMP3GG_YouTube_Wind-sound-effect-3-tunnel-wind_Media_4exmfHshVmY_006_128k (Tunnel ambient wind)
     private var introJohnPlayer: AVAudioPlayer?     // Introduction-john.mp3 (intro screen background music)
     private var introSection1Player: AVAudioPlayer? // introduction/section-1.mp3 (voiceover section 1)
     private var introSection2Player: AVAudioPlayer? // introduction/section-2.mp3 (voiceover section 2)
@@ -52,6 +55,9 @@ final class SynthAudioEngine: @unchecked Sendable {
     private var introJohnFade = FadeState()
     private var menuFade = FadeState()
     private var krotoszynFade = FadeState()
+    private var kozminFade = FadeState()
+    private var tunnelFade = FadeState()
+    private var windFade = FadeState()
     
     // Timer for fades (macOS and iOS compatible)
     private var fadeTimer: Timer?
@@ -80,6 +86,9 @@ final class SynthAudioEngine: @unchecked Sendable {
         loadPlayer(resource: "Horn", store: &honkPlayer, initialVolume: 0.0)
         loadPlayer(resource: "YTMP3GG_YouTube_01-Medal-of-Honor-Allied-Assault-Main-Ti_Media_-kWeJ9ywQJM_006_128k", store: &menuPlayer, initialVolume: 0.0)
         loadPlayer(resource: "YTMP3GG_YouTube_05-Medal-of-Honor-Allied-Assault-Lightin_Media_G0t4Y-cdDNE_005_128k", store: &krotoszynPlayer, initialVolume: 0.0)
+        loadPlayer(resource: "YTMP3GG_YouTube_10-Medal-of-Honor-Allied-Assault-Diverti_Media_kPGy19llwIg_005_128k", store: &kozminPlayer, initialVolume: 0.0)
+        loadPlayer(resource: "YTMP3GG_YouTube_28-Medal-of-Honor-Allied-Assault-Stadt_Media_wddqtnkYKBs_005_128k", store: &tunnelPlayer, initialVolume: 0.0)
+        loadPlayer(resource: "YTMP3GG_YouTube_Wind-sound-effect-3-tunnel-wind_Media_4exmfHshVmY_006_128k", store: &windPlayer, initialVolume: 0.0)
         loadPlayer(resource: "Introduction-john", store: &introJohnPlayer, initialVolume: 0.0)
         loadIntroSectionPlayer(resource: "section-1", store: &introSection1Player)
         loadIntroSectionPlayer(resource: "section-2", store: &introSection2Player)
@@ -144,6 +153,9 @@ final class SynthAudioEngine: @unchecked Sendable {
             self.introJohnFade.isActive = false
             self.menuFade.isActive = false
             self.krotoszynFade.isActive = false
+            self.kozminFade.isActive = false
+            self.tunnelFade.isActive = false
+            self.windFade.isActive = false
             
             self.ambiencePlayer?.stop()
             self.ambiencePlayer?.volume = 0.0
@@ -169,6 +181,12 @@ final class SynthAudioEngine: @unchecked Sendable {
             self.menuPlayer?.volume = 0.0
             self.krotoszynPlayer?.stop()
             self.krotoszynPlayer?.volume = 0.0
+            self.kozminPlayer?.stop()
+            self.kozminPlayer?.volume = 0.0
+            self.tunnelPlayer?.stop()
+            self.tunnelPlayer?.volume = 0.0
+            self.windPlayer?.stop()
+            self.windPlayer?.volume = 0.0
             self.introSection1Player?.stop()
             self.introSection1Player?.volume = 0.0
             self.introSection2Player?.stop()
@@ -280,6 +298,13 @@ final class SynthAudioEngine: @unchecked Sendable {
             if chapter == .krotoszyn {
                 self.krotoszynPlayer?.currentTime = 0.0
             }
+            if chapter == .kozmin {
+                self.kozminPlayer?.currentTime = 0.0
+            }
+            if chapter == .tunnel {
+                self.tunnelPlayer?.currentTime = 0.0
+                self.windPlayer?.currentTime = 0.0
+            }
             
             switch chapter {
             case .krotoszyn:
@@ -309,6 +334,8 @@ final class SynthAudioEngine: @unchecked Sendable {
             let isJarocin = (chapter == .jarocin)
             let wasKrotoszyn = (oldChapter == .krotoszyn)
             let isKrotoszyn = (chapter == .krotoszyn)
+            let isKozmin = (chapter == .kozmin)
+            let isTunnel = (chapter == .tunnel)
             let wasPeaceful = Self.isPeacefulChapter(oldChapter)
             let isPeaceful = Self.isPeacefulChapter(chapter)
             
@@ -332,6 +359,15 @@ final class SynthAudioEngine: @unchecked Sendable {
                 self.fadeOut(player: self.krotoszynPlayer, fade: &self.krotoszynFade, duration: 2.5) { [weak self] in
                     self?.krotoszynPlayer?.pause()
                 }
+                self.fadeOut(player: self.kozminPlayer, fade: &self.kozminFade, duration: 2.5) { [weak self] in
+                    self?.kozminPlayer?.pause()
+                }
+                self.fadeOut(player: self.tunnelPlayer, fade: &self.tunnelFade, duration: 2.5) { [weak self] in
+                    self?.tunnelPlayer?.pause()
+                }
+                self.fadeOut(player: self.windPlayer, fade: &self.windFade, duration: 2.5) { [weak self] in
+                    self?.windPlayer?.pause()
+                }
             } else if isKrotoszyn {
                 // Fade in krotoszynPlayer (Medal of Honor Lighting)
                 self.ensurePlaying(self.krotoszynPlayer)
@@ -349,6 +385,68 @@ final class SynthAudioEngine: @unchecked Sendable {
                 }
                 self.fadeOut(player: self.menuPlayer, fade: &self.menuFade, duration: 2.5) { [weak self] in
                     self?.menuPlayer?.pause()
+                }
+                self.fadeOut(player: self.kozminPlayer, fade: &self.kozminFade, duration: 2.5) { [weak self] in
+                    self?.kozminPlayer?.pause()
+                }
+                self.fadeOut(player: self.tunnelPlayer, fade: &self.tunnelFade, duration: 2.5) { [weak self] in
+                    self?.tunnelPlayer?.pause()
+                }
+                self.fadeOut(player: self.windPlayer, fade: &self.windFade, duration: 2.5) { [weak self] in
+                    self?.windPlayer?.pause()
+                }
+            } else if isKozmin {
+                // Fade in kozminPlayer (Medal of Honor Diverti)
+                self.ensurePlaying(self.kozminPlayer)
+                self.fadeIn(player: self.kozminPlayer, fade: &self.kozminFade, to: self.ambienceTargetVolume, duration: 2.5)
+                
+                // Fade out others
+                self.fadeOut(player: self.ambiencePlayer, fade: &self.ambienceFade, duration: 2.5) { [weak self] in
+                    self?.ambiencePlayer?.pause()
+                }
+                self.fadeOut(player: self.peacefulPlayer, fade: &self.peacefulFade, duration: 2.5) { [weak self] in
+                    self?.peacefulPlayer?.pause()
+                }
+                self.fadeOut(player: self.level3Player, fade: &self.level3Fade, duration: 2.5) { [weak self] in
+                    self?.level3Player?.pause()
+                }
+                self.fadeOut(player: self.menuPlayer, fade: &self.menuFade, duration: 2.5) { [weak self] in
+                    self?.menuPlayer?.pause()
+                }
+                self.fadeOut(player: self.krotoszynPlayer, fade: &self.krotoszynFade, duration: 2.5) { [weak self] in
+                    self?.krotoszynPlayer?.pause()
+                }
+                self.fadeOut(player: self.tunnelPlayer, fade: &self.tunnelFade, duration: 2.5) { [weak self] in
+                    self?.tunnelPlayer?.pause()
+                }
+                self.fadeOut(player: self.windPlayer, fade: &self.windFade, duration: 2.5) { [weak self] in
+                    self?.windPlayer?.pause()
+                }
+            } else if isTunnel {
+                // Fade in tunnelPlayer (Medal of Honor Stadt) and windPlayer (Tunnel wind sound)
+                self.ensurePlaying(self.tunnelPlayer)
+                self.fadeIn(player: self.tunnelPlayer, fade: &self.tunnelFade, to: self.ambienceTargetVolume, duration: 2.5)
+                self.ensurePlaying(self.windPlayer)
+                self.fadeIn(player: self.windPlayer, fade: &self.windFade, to: 0.7, duration: 2.5)
+                
+                // Fade out others
+                self.fadeOut(player: self.ambiencePlayer, fade: &self.ambienceFade, duration: 2.5) { [weak self] in
+                    self?.ambiencePlayer?.pause()
+                }
+                self.fadeOut(player: self.peacefulPlayer, fade: &self.peacefulFade, duration: 2.5) { [weak self] in
+                    self?.peacefulPlayer?.pause()
+                }
+                self.fadeOut(player: self.level3Player, fade: &self.level3Fade, duration: 2.5) { [weak self] in
+                    self?.level3Player?.pause()
+                }
+                self.fadeOut(player: self.menuPlayer, fade: &self.menuFade, duration: 2.5) { [weak self] in
+                    self?.menuPlayer?.pause()
+                }
+                self.fadeOut(player: self.krotoszynPlayer, fade: &self.krotoszynFade, duration: 2.5) { [weak self] in
+                    self?.krotoszynPlayer?.pause()
+                }
+                self.fadeOut(player: self.kozminPlayer, fade: &self.kozminFade, duration: 2.5) { [weak self] in
+                    self?.kozminPlayer?.pause()
                 }
             } else if isPeaceful {
                 // Fade in peaceful
@@ -368,6 +466,15 @@ final class SynthAudioEngine: @unchecked Sendable {
                 self.fadeOut(player: self.krotoszynPlayer, fade: &self.krotoszynFade, duration: 2.5) { [weak self] in
                     self?.krotoszynPlayer?.pause()
                 }
+                self.fadeOut(player: self.kozminPlayer, fade: &self.kozminFade, duration: 2.5) { [weak self] in
+                    self?.kozminPlayer?.pause()
+                }
+                self.fadeOut(player: self.tunnelPlayer, fade: &self.tunnelFade, duration: 2.5) { [weak self] in
+                    self?.tunnelPlayer?.pause()
+                }
+                self.fadeOut(player: self.windPlayer, fade: &self.windFade, duration: 2.5) { [weak self] in
+                    self?.windPlayer?.pause()
+                }
             } else {
                 // Fade in wartime ambience
                 self.ensurePlaying(self.ambiencePlayer)
@@ -385,6 +492,15 @@ final class SynthAudioEngine: @unchecked Sendable {
                 }
                 self.fadeOut(player: self.krotoszynPlayer, fade: &self.krotoszynFade, duration: 2.5) { [weak self] in
                     self?.krotoszynPlayer?.pause()
+                }
+                self.fadeOut(player: self.kozminPlayer, fade: &self.kozminFade, duration: 2.5) { [weak self] in
+                    self?.kozminPlayer?.pause()
+                }
+                self.fadeOut(player: self.tunnelPlayer, fade: &self.tunnelFade, duration: 2.5) { [weak self] in
+                    self?.tunnelPlayer?.pause()
+                }
+                self.fadeOut(player: self.windPlayer, fade: &self.windFade, duration: 2.5) { [weak self] in
+                    self?.windPlayer?.pause()
                 }
             }
             
@@ -495,6 +611,18 @@ final class SynthAudioEngine: @unchecked Sendable {
             fadeOut(player: menuPlayer, fade: &menuFade, duration: 1.5) { [weak self] in
                 self?.menuPlayer?.pause()
             }
+            fadeOut(player: krotoszynPlayer, fade: &krotoszynFade, duration: 1.5) { [weak self] in
+                self?.krotoszynPlayer?.pause()
+            }
+            fadeOut(player: kozminPlayer, fade: &kozminFade, duration: 1.5) { [weak self] in
+                self?.kozminPlayer?.pause()
+            }
+            fadeOut(player: tunnelPlayer, fade: &tunnelFade, duration: 1.5) { [weak self] in
+                self?.tunnelPlayer?.pause()
+            }
+            fadeOut(player: windPlayer, fade: &windFade, duration: 1.5) { [weak self] in
+                self?.windPlayer?.pause()
+            }
         } else if currentChapter == .krotoszyn {
             ensurePlaying(krotoszynPlayer)
             fadeIn(player: krotoszynPlayer, fade: &krotoszynFade, to: ambienceTargetVolume, duration: 3.0)
@@ -509,6 +637,63 @@ final class SynthAudioEngine: @unchecked Sendable {
             }
             fadeOut(player: menuPlayer, fade: &menuFade, duration: 1.5) { [weak self] in
                 self?.menuPlayer?.pause()
+            }
+            fadeOut(player: kozminPlayer, fade: &kozminFade, duration: 1.5) { [weak self] in
+                self?.kozminPlayer?.pause()
+            }
+            fadeOut(player: tunnelPlayer, fade: &tunnelFade, duration: 1.5) { [weak self] in
+                self?.tunnelPlayer?.pause()
+            }
+            fadeOut(player: windPlayer, fade: &windFade, duration: 1.5) { [weak self] in
+                self?.windPlayer?.pause()
+            }
+        } else if currentChapter == .kozmin {
+            ensurePlaying(kozminPlayer)
+            fadeIn(player: kozminPlayer, fade: &kozminFade, to: ambienceTargetVolume, duration: 3.0)
+            fadeOut(player: ambiencePlayer, fade: &ambienceFade, duration: 1.5) { [weak self] in
+                self?.ambiencePlayer?.pause()
+            }
+            fadeOut(player: peacefulPlayer, fade: &peacefulFade, duration: 1.5) { [weak self] in
+                self?.peacefulPlayer?.pause()
+            }
+            fadeOut(player: level3Player, fade: &level3Fade, duration: 1.5) { [weak self] in
+                self?.level3Player?.pause()
+            }
+            fadeOut(player: menuPlayer, fade: &menuFade, duration: 1.5) { [weak self] in
+                self?.menuPlayer?.pause()
+            }
+            fadeOut(player: krotoszynPlayer, fade: &krotoszynFade, duration: 1.5) { [weak self] in
+                self?.krotoszynPlayer?.pause()
+            }
+            fadeOut(player: tunnelPlayer, fade: &tunnelFade, duration: 1.5) { [weak self] in
+                self?.tunnelPlayer?.pause()
+            }
+            fadeOut(player: windPlayer, fade: &windFade, duration: 1.5) { [weak self] in
+                self?.windPlayer?.pause()
+            }
+        } else if currentChapter == .tunnel {
+            ensurePlaying(tunnelPlayer)
+            fadeIn(player: tunnelPlayer, fade: &tunnelFade, to: ambienceTargetVolume, duration: 3.0)
+            ensurePlaying(windPlayer)
+            fadeIn(player: windPlayer, fade: &windFade, to: 0.7, duration: 3.0)
+            
+            fadeOut(player: ambiencePlayer, fade: &ambienceFade, duration: 1.5) { [weak self] in
+                self?.ambiencePlayer?.pause()
+            }
+            fadeOut(player: peacefulPlayer, fade: &peacefulFade, duration: 1.5) { [weak self] in
+                self?.peacefulPlayer?.pause()
+            }
+            fadeOut(player: level3Player, fade: &level3Fade, duration: 1.5) { [weak self] in
+                self?.level3Player?.pause()
+            }
+            fadeOut(player: menuPlayer, fade: &menuFade, duration: 1.5) { [weak self] in
+                self?.menuPlayer?.pause()
+            }
+            fadeOut(player: krotoszynPlayer, fade: &krotoszynFade, duration: 1.5) { [weak self] in
+                self?.krotoszynPlayer?.pause()
+            }
+            fadeOut(player: kozminPlayer, fade: &kozminFade, duration: 1.5) { [weak self] in
+                self?.kozminPlayer?.pause()
             }
         } else if Self.isPeacefulChapter(currentChapter) {
             ensurePlaying(peacefulPlayer)
@@ -525,6 +710,15 @@ final class SynthAudioEngine: @unchecked Sendable {
             fadeOut(player: krotoszynPlayer, fade: &krotoszynFade, duration: 1.5) { [weak self] in
                 self?.krotoszynPlayer?.pause()
             }
+            fadeOut(player: kozminPlayer, fade: &kozminFade, duration: 1.5) { [weak self] in
+                self?.kozminPlayer?.pause()
+            }
+            fadeOut(player: tunnelPlayer, fade: &tunnelFade, duration: 1.5) { [weak self] in
+                self?.tunnelPlayer?.pause()
+            }
+            fadeOut(player: windPlayer, fade: &windFade, duration: 1.5) { [weak self] in
+                self?.windPlayer?.pause()
+            }
         } else {
             ensurePlaying(ambiencePlayer)
             fadeIn(player: ambiencePlayer, fade: &ambienceFade, to: ambienceTargetVolume, duration: 3.0)
@@ -539,6 +733,15 @@ final class SynthAudioEngine: @unchecked Sendable {
             }
             fadeOut(player: krotoszynPlayer, fade: &krotoszynFade, duration: 1.5) { [weak self] in
                 self?.krotoszynPlayer?.pause()
+            }
+            fadeOut(player: kozminPlayer, fade: &kozminFade, duration: 1.5) { [weak self] in
+                self?.kozminPlayer?.pause()
+            }
+            fadeOut(player: tunnelPlayer, fade: &tunnelFade, duration: 1.5) { [weak self] in
+                self?.tunnelPlayer?.pause()
+            }
+            fadeOut(player: windPlayer, fade: &windFade, duration: 1.5) { [weak self] in
+                self?.windPlayer?.pause()
             }
         }
     }
@@ -558,6 +761,15 @@ final class SynthAudioEngine: @unchecked Sendable {
         }
         fadeOut(player: krotoszynPlayer, fade: &krotoszynFade, duration: 1.5) { [weak self] in
             self?.krotoszynPlayer?.pause()
+        }
+        fadeOut(player: kozminPlayer, fade: &kozminFade, duration: 1.5) { [weak self] in
+            self?.kozminPlayer?.pause()
+        }
+        fadeOut(player: tunnelPlayer, fade: &tunnelFade, duration: 1.5) { [weak self] in
+            self?.tunnelPlayer?.pause()
+        }
+        fadeOut(player: windPlayer, fade: &windFade, duration: 1.5) { [weak self] in
+            self?.windPlayer?.pause()
         }
     }
     
@@ -603,6 +815,9 @@ final class SynthAudioEngine: @unchecked Sendable {
         processFade(player: introJohnPlayer, fade: &introJohnFade, dt: dt)
         processFade(player: menuPlayer, fade: &menuFade, dt: dt)
         processFade(player: krotoszynPlayer, fade: &krotoszynFade, dt: dt)
+        processFade(player: kozminPlayer, fade: &kozminFade, dt: dt)
+        processFade(player: tunnelPlayer, fade: &tunnelFade, dt: dt)
+        processFade(player: windPlayer, fade: &windFade, dt: dt)
     }
     
     private func processFade(player: AVAudioPlayer?, fade: inout FadeState, dt: TimeInterval) {

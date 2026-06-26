@@ -109,7 +109,7 @@ final class TrainController {
             }
         } else if chapter == .zolkiew && speed <= 0.1 && !hasTriggeredEnding {
             hasTriggeredEnding = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
                 GameDirector.shared.completeChapter(.zolkiew)
             }
         }

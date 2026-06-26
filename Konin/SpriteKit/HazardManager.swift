@@ -11,6 +11,7 @@ final class HazardNode: SKSpriteNode {
     var progress: Double = 0.0
     var hasCollided: Bool = false
     var warningFlashed: Bool = false
+    var variant: Int = 0
 }
 
 final class HazardManager {
@@ -93,13 +94,19 @@ final class HazardManager {
             // Colour pulse gets faster as it approaches
             let pulseSpeed = 8.0 + t * 20.0
             let pulse = sin(Date().timeIntervalSince1970 * pulseSpeed)
-            hazard.color = pulse > 0.0 ? .red : SKColor(red: 1.0, green: 0.7, blue: 0.0, alpha: 1.0)
+            
+            // Keep the light color at the mine red (pulsing red/dark red)
+            let pulseColor = pulse > 0.0 ? SKColor.red : SKColor(red: 0.2, green: 0.0, blue: 0.0, alpha: 1.0)
+            
+            if let light = hazard.childNode(withName: "indicator_light") as? SKSpriteNode {
+                light.color = pulseColor
+            }
             
             // 3. Collision — check logical targetLane for responsiveness when the hazard reaches the train (t >= 0.95)
             if t >= 0.95 && !hazard.hasCollided {
                 hazard.hasCollided = true
                 if scene.trainController.targetLane == hazard.lane {
-                    triggerCollision()
+                    triggerCollision(for: hazard)
                 }
             }
         }
@@ -127,27 +134,154 @@ final class HazardManager {
         lastSpawnedLane = lane
         spawnCount += 1
         
-        let hazardSize = CGSize(width: 90, height: 14)
-        let hazard = HazardNode(color: .red, size: hazardSize)
+        let hazard = HazardNode(color: .clear, size: CGSize(width: 60, height: 60))
         hazard.lane = lane
         hazard.progress = 0.0
         
-        let label = SKLabelNode(text: "⚠  BROKEN RAIL")
-        label.fontName = "Helvetica-Bold"
-        label.fontSize = 10
-        label.fontColor = .black
-        label.verticalAlignmentMode = .center
-        label.position = .zero
-        hazard.addChild(label)
+        let variant = Int.random(in: 0...2)
+        hazard.variant = variant
+        
+        switch variant {
+        case 0:
+            // --- VARIANT 0: German S2-Schrapnellmine (Canister style) ---
+            // 1. Dirt/gravel mound at the base (semi-buried look)
+            let dirtMound = SKSpriteNode(color: SKColor(red: 0.23, green: 0.19, blue: 0.15, alpha: 1.0), size: CGSize(width: 44, height: 12))
+            dirtMound.position = CGPoint(x: 0, y: -16)
+            dirtMound.zPosition = 0.1
+            hazard.addChild(dirtMound)
+            
+            // 2. Main cylindrical body of the S2-mine
+            let mineBody = SKSpriteNode(color: SKColor(red: 0.24, green: 0.29, blue: 0.21, alpha: 1.0), size: CGSize(width: 28, height: 20))
+            mineBody.position = CGPoint(x: 0, y: -6)
+            mineBody.zPosition = 0.2
+            
+            // Give it a dark metal border
+            let border = SKSpriteNode(color: SKColor(red: 0.12, green: 0.15, blue: 0.10, alpha: 1.0), size: CGSize(width: 30, height: 22))
+            border.position = .zero
+            border.zPosition = -0.05
+            mineBody.addChild(border)
+            hazard.addChild(mineBody)
+            
+            // 3. Fuse cap
+            let fuseCap = SKSpriteNode(color: SKColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0), size: CGSize(width: 6, height: 5))
+            fuseCap.position = CGPoint(x: 0, y: 6)
+            fuseCap.zPosition = 0.3
+            hazard.addChild(fuseCap)
+            
+            // 4. Three igniter prongs (bouncing S-mine signature look)
+            let prongAngles: [CGFloat] = [-0.3, 0.0, 0.3]
+            for angle in prongAngles {
+                let prong = SKSpriteNode(color: SKColor(red: 0.7, green: 0.7, blue: 0.7, alpha: 1.0), size: CGSize(width: 1.5, height: 8))
+                prong.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                prong.position = CGPoint(x: 0, y: 8)
+                prong.zRotation = angle
+                prong.zPosition = 0.2
+                hazard.addChild(prong)
+            }
+            
+            // 5. Pulsing red indicator light
+            let glowNode = SKSpriteNode(color: .red, size: CGSize(width: 6, height: 6))
+            glowNode.name = "indicator_light"
+            glowNode.position = CGPoint(x: 0, y: -6)
+            glowNode.zPosition = 0.4
+            hazard.addChild(glowNode)
+            
+        case 1:
+            // --- VARIANT 1: German Tellermine 43 (Disc style) ---
+            // 1. Dirt/gravel mound at the base
+            let dirtMound = SKSpriteNode(color: SKColor(red: 0.23, green: 0.19, blue: 0.15, alpha: 1.0), size: CGSize(width: 52, height: 10))
+            dirtMound.position = CGPoint(x: 0, y: -16)
+            dirtMound.zPosition = 0.1
+            hazard.addChild(dirtMound)
+            
+            // 2. Wide flat body
+            let mineBody = SKSpriteNode(color: SKColor(red: 0.35, green: 0.38, blue: 0.41, alpha: 1.0), size: CGSize(width: 38, height: 12))
+            mineBody.position = CGPoint(x: 0, y: -10)
+            mineBody.zPosition = 0.2
+            
+            // Give it a dark metal border
+            let border = SKSpriteNode(color: SKColor(red: 0.13, green: 0.15, blue: 0.16, alpha: 1.0), size: CGSize(width: 40, height: 14))
+            border.position = .zero
+            border.zPosition = -0.05
+            mineBody.addChild(border)
+            hazard.addChild(mineBody)
+            
+            // 3. Central pressure plate
+            let plate = SKSpriteNode(color: SKColor(red: 0.55, green: 0.58, blue: 0.60, alpha: 1.0), size: CGSize(width: 16, height: 6))
+            plate.position = CGPoint(x: 0, y: -7)
+            plate.zPosition = 0.3
+            hazard.addChild(plate)
+            
+            // 4. Side carry handle loop
+            let handle = SKSpriteNode(color: SKColor(red: 0.30, green: 0.32, blue: 0.35, alpha: 1.0), size: CGSize(width: 6, height: 4))
+            handle.position = CGPoint(x: -21, y: -10)
+            handle.zPosition = 0.15
+            hazard.addChild(handle)
+            
+            // 5. Pulsing indicator light (Red)
+            let glowNode = SKSpriteNode(color: .red, size: CGSize(width: 5, height: 5))
+            glowNode.name = "indicator_light"
+            glowNode.position = CGPoint(x: 0, y: -7)
+            glowNode.zPosition = 0.4
+            hazard.addChild(glowNode)
+            
+        default:
+            // --- VARIANT 2: German Stockmine 43 (Stake/Concrete style) ---
+            // 1. Wooden stake driven into ground
+            let stake = SKSpriteNode(color: SKColor(red: 0.36, green: 0.25, blue: 0.20, alpha: 1.0), size: CGSize(width: 4, height: 24))
+            stake.position = CGPoint(x: 0, y: -14)
+            stake.zPosition = 0.15
+            hazard.addChild(stake)
+            
+            // 2. Concrete cylindrical body
+            let mineBody = SKSpriteNode(color: SKColor(red: 0.50, green: 0.55, blue: 0.55, alpha: 1.0), size: CGSize(width: 16, height: 20))
+            mineBody.position = CGPoint(x: 0, y: 4)
+            mineBody.zPosition = 0.2
+            
+            // Dark border
+            let border = SKSpriteNode(color: SKColor(red: 0.25, green: 0.27, blue: 0.27, alpha: 1.0), size: CGSize(width: 18, height: 22))
+            border.position = .zero
+            border.zPosition = -0.05
+            mineBody.addChild(border)
+            hazard.addChild(mineBody)
+            
+            // 3. Top fuse wire loop
+            let wireLoop = SKSpriteNode(color: SKColor(red: 0.74, green: 0.76, blue: 0.78, alpha: 1.0), size: CGSize(width: 6, height: 4))
+            wireLoop.position = CGPoint(x: 0, y: 16)
+            wireLoop.zPosition = 0.3
+            hazard.addChild(wireLoop)
+            
+            // 4. Pulsing indicator light (Red)
+            let glowNode = SKSpriteNode(color: .red, size: CGSize(width: 5, height: 5))
+            glowNode.name = "indicator_light"
+            glowNode.position = CGPoint(x: 0, y: 4)
+            glowNode.zPosition = 0.4
+            hazard.addChild(glowNode)
+        }
         
         scene.addChild(hazard)
         activeHazards.append(hazard)
     }
     
-    private func triggerCollision() {
+    private func triggerCollision(for hazard: HazardNode) {
         guard let scene = scene else { return }
-        scene.cameraController.shake(duration: 0.7, intensity: 18)
-        GameDirector.shared.updateCoal(-30.0)
+        
+        let damage: Double
+        let shakeIntensity: CGFloat
+        switch hazard.variant {
+        case 1: // Tellermine (Big)
+            damage = -45.0
+            shakeIntensity = 24.0
+        case 0: // S2-mine (Medium)
+            damage = -30.0
+            shakeIntensity = 18.0
+        default: // Stockmine (Small)
+            damage = -15.0
+            shakeIntensity = 12.0
+        }
+        
+        scene.cameraController.shake(duration: 0.7, intensity: shakeIntensity)
+        GameDirector.shared.updateCoal(damage)
         SynthAudioEngine.shared.playExplosion()
         SynthAudioEngine.shared.playDamage()
         scene.triggerFlash(color: SKColor(red: 0.9, green: 0.1, blue: 0.1, alpha: 0.7))
