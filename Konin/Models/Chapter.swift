@@ -6,6 +6,7 @@
 import Foundation
 
 enum Chapter: String, CaseIterable, Codable, Equatable {
+    case prolog = "Prolog"
     case krotoszyn = "Krotoszyn"
     case kozmin = "Koźmin"
     case jarocin = "Jarocin"
@@ -15,6 +16,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var title: String {
         switch self {
+        case .prolog: return "Prologue"
         case .krotoszyn: return "Chapter 1 — Krotoszyn"
         case .kozmin: return "Chapter 2 — Koźmin"
         case .jarocin: return "Chapter 3 — Jarocin"
@@ -26,6 +28,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var actTitle: String {
         switch self {
+        case .prolog: return "Prologue"
         case .krotoszyn: return "Chapter 1 — Krotoszyn"
         case .kozmin: return "Chapter 2: Koźmin"
         case .jarocin: return "Chapter 3: Jarocin"
@@ -37,6 +40,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var storyHeader: String {
         switch self {
+        case .prolog: return "Prologue"
         case .krotoszyn: return "September 1st, 1939"
         case .kozmin: return "Chapter 2 — Koźmin"
         case .jarocin: return "Chapter 3 — Jarocin"
@@ -48,6 +52,12 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var storyParagraphs: [String] {
         switch self {
+        case .prolog: return [
+            "Before the rails carried us south, there was only the sound of distant thunder.",
+            "John Patrekov had spent his life driving trains through quiet Polish towns, believing the tracks would always lead home.",
+            "Then the war reached the horizon, and every station became a place of farewell.",
+            "This is where his journey begins."
+        ]
         case .krotoszyn:
             return [
                 "Germany has broken through Poland's western frontier.",
@@ -96,6 +106,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var next: Chapter? {
         switch self {
+        case .prolog: return .krotoszyn
         case .krotoszyn: return .kozmin
         case .kozmin: return .jarocin
         case .jarocin: return .tunnel
@@ -108,41 +119,38 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     // Gameplay balance variables
     var coalDecayRate: Double {
         switch self {
-        case .krotoszyn: return 1.2 // slow decay
-        case .kozmin: return 1.8    // normal decay
-        case .jarocin: return 2.5   // fast decay
-        case .tunnel: return 1.5    // normal
-        case .konin, .zolkiew: return 0.0 // no coal decay
+        case .prolog, .konin, .zolkiew: return 0.0
+        case .krotoszyn: return 1.2
+        case .kozmin: return 1.8
+        case .jarocin: return 2.5
+        case .tunnel: return 1.5
         }
     }
     
     var obstacleSpawnInterval: TimeInterval {
         switch self {
-        case .krotoszyn: return 9999.0 // none
-        case .kozmin: return 6.0      // normal obstacles
-        case .jarocin: return 4.0     // frequent obstacles
-        case .tunnel: return 9999.0   // none
-        case .konin, .zolkiew: return 9999.0 // none
+        case .prolog, .krotoszyn, .tunnel, .konin, .zolkiew: return 9999.0
+        case .kozmin: return 6.0
+        case .jarocin: return 4.0
         }
     }
     
     var airRaidSpawnInterval: TimeInterval {
         switch self {
-        case .krotoszyn, .kozmin: return 9999.0 // none
-        case .jarocin: return 4.5                // air raids
-        case .tunnel: return 9999.0             // none
-        case .konin, .zolkiew: return 9999.0    // none
+        case .prolog, .krotoszyn, .kozmin, .tunnel, .konin, .zolkiew: return 9999.0
+        case .jarocin: return 4.5
         }
     }
     
     var targetDistance: Double {
         switch self {
+        case .prolog: return 0.0
         case .krotoszyn: return 320.0
         case .kozmin: return 480.0
         case .jarocin: return 1280.0
         case .tunnel: return 360.0
         case .konin: return 500.0
-        case .zolkiew: return 0.0 // instant arrival/credits
+        case .zolkiew: return 0.0
         }
     }
 }

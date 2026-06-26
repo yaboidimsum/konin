@@ -171,9 +171,9 @@ struct LoadingView: View {
                             introTask?.cancel()
                             introTask = nil
                             
-                            // Transition to Story chapter 1 view
+                            // Transition to the opening prologue story
                             withAnimation(.easeInOut(duration: 0.8)) {
-                                director.changeState(to: .story(.krotoszyn))
+                                director.changeState(to: .story(.prolog))
                             }
                         }) {
                             Text(">> SKIP")
@@ -306,9 +306,9 @@ struct LoadingView: View {
                         introTask?.cancel()
                         introTask = nil
                         
-                        // Transition to Story chapter 1 view
+                        // Transition to the opening prologue story
                         withAnimation(.easeInOut(duration: 0.8)) {
-                            director.changeState(to: .story(.krotoszyn))
+                            director.changeState(to: .story(.prolog))
                         }
                     }
                 }
@@ -365,3 +365,6 @@ struct LoadingView: View {
     }
 }
 
+#Preview {
+    LoadingView()
+}

@@ -155,3 +155,6 @@ struct FailedView: View {
     }
 }
 
+#Preview {
+    FailedView(chapter: .krotoszyn)
+}

@@ -162,6 +162,8 @@ struct GameView: View {
     private var activeCaptionText: String? {
         let dist = director.distanceTravelled
         switch chapter {
+        case .prolog:
+            break
         case .krotoszyn:
             if dist >= 20.0 && dist <= 110.0 {
                 return "John: \"The furnace is hungry. Keep stoking coal (Space) to maintain speed.\""
@@ -251,3 +253,6 @@ struct GameView: View {
         }
     }
 }
+
+#Preview {
+    GameView(chapter: .krotoszyn)}

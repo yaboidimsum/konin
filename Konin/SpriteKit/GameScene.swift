@@ -972,7 +972,7 @@ final class GameScene: SKScene {
         skyNode?.texture = nil
         
         switch chapter {
-        case .krotoszyn:
+        case .prolog, .krotoszyn:
             // Horizon Sky color #0D4969
             skyNode.texture = nil
             skyNode.color = SKColor(red: 13.0/255.0, green: 73.0/255.0, blue: 105.0/255.0, alpha: 1.0)

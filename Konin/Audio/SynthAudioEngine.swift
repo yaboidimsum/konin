@@ -300,6 +300,9 @@ final class SynthAudioEngine: @unchecked Sendable {
             case .zolkiew:
                 self.ambienceTargetVolume = 0.40
                 self.trainTargetVolume    = 0.20
+            case .prolog:
+                self.ambienceTargetVolume = 0.30
+                self.trainTargetVolume    = 0.50
             }
             
             let wasJarocin = (oldChapter == .jarocin)

@@ -168,3 +168,6 @@ struct StoryView: View {
     }
 }
 
+#Preview {
+    StoryView(chapter: .prolog)
+}

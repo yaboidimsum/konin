@@ -47,7 +47,7 @@ final class GameDirector {
         case .story(let chapter):
             activeChapter = chapter
             audio.setChapter(chapter)
-            if chapter == .krotoszyn {
+            if chapter == .prolog || chapter == .krotoszyn {
                 audio.startIntroJohn()
             } else {
                 audio.setAmbienceActive(false)
@@ -83,7 +83,11 @@ final class GameDirector {
     }
     
     func advanceFromStory(_ chapter: Chapter) {
-        changeState(to: .playing(chapter))
+        if chapter == .prolog {
+            changeState(to: .story(.krotoszyn))
+        } else {
+            changeState(to: .playing(chapter))
+        }
     }
     
     func retryChapter(_ chapter: Chapter) {

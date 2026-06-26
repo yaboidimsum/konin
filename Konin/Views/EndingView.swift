@@ -158,3 +158,7 @@ struct EndingView: View {
         }
     }
 }
+
+#Preview {
+    EndingView()
+}
