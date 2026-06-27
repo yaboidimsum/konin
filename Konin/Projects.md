@@ -89,11 +89,11 @@ Space Key
 
 ### Purpose
 
-Avoid damaged railway sections.
+Avoid German land mines.
 
 ### Behavior
 
-* Broken rails appear on either lane.
+* German land mines appear on either lane.
 * Player must switch tracks before impact.
 
 ### Failure Result
@@ -150,7 +150,7 @@ Hopeful
 
 ### Gameplay
 
-Broken rail hazards introduced.
+German land mine hazards introduced.
 
 ### Tone
 
@@ -162,7 +162,7 @@ Growing tension
 
 ### Gameplay
 
-* Broken rails
+* German land mines
 * Luftwaffe attacks
 
 ### Tone
@@ -211,7 +211,7 @@ No hazards.
 
 No air raids.
 
-No broken rails.
+No land mines.
 
 No coal pressure.
 
@@ -382,7 +382,7 @@ LastTrainEast/
 
 * First-person railway view
 * Coal system
-* Broken rails
+* German land mines
 * Air raid mechanic
 * Station progression
 * Tunnel sequence
@@ -413,7 +413,7 @@ LastTrainEast/
 
 ## Day 3
 
-* Broken rail hazards
+* German land mine hazards
 * Lane switching
 
 ## Day 4

@@ -22,6 +22,7 @@ final class GameScene: SKScene {
     var isWaitingToStart = true {
         didSet {
             if !isWaitingToStart {
+                trainController.setBraking(false)
                 if failOverlay != nil && activeChapter != .zolkiew {
                     failOverlay.run(SKAction.fadeOut(withDuration: 3.0))
                 }
@@ -1083,6 +1084,13 @@ final class GameScene: SKScene {
             tunnelDarkness.alpha = 0.0
             headlightBeam.alpha = 0.0
             updateRailsColor(.white)
+        case .prolog:
+            skyNode.color = .white
+            groundNode.color = .white
+            horizonLine.color = .white
+            tunnelDarkness.alpha = 0.0
+            headlightBeam.alpha = 0.0
+            updateRailsColor(.white)
         }
     }
     
@@ -1724,13 +1732,13 @@ final class GameScene: SKScene {
             "Ridwan: Train lover"
         ]
         
-        let startDelay: TimeInterval = 2.0
+        let startDelay: TimeInterval = 6.0
         let fadeDuration: TimeInterval = 1.0
         let stayDuration: TimeInterval = 2.5
-        let stepDelay: TimeInterval = fadeDuration * 2.0 + stayDuration + 0.5 // 5.0s per credit
+        let stepDelay: TimeInterval = fadeDuration * 2.0 + stayDuration + 0.2 // 2.7s per credit
         
         for (index, text) in credits.enumerated() {
-            let label = SKLabelNode(fontNamed: "HelveticaNeue-Light")
+            let label = SKLabelNode(fontNamed: "VCR OSD Mono")
             label.name = "chapter_credits"
             label.text = text
             label.fontSize = 24

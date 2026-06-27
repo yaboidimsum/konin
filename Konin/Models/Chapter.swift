@@ -68,8 +68,8 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
         case .kozmin:
             return [
                 "We reached Koźmin, but the skies are turning gray.",
-                "Reports say the Luftwaffe is targeting infrastructure. The rails ahead are damaged.",
-                "I must watch the tracks closely and switch between lanes to avoid derailment.",
+                "Reports say German forces have laid land mines along the railway tracks ahead.",
+                "I must watch the tracks closely and switch between lanes to avoid detonation.",
                 "The families behind me are counting on this train to keep moving."
             ]
         case .jarocin:
@@ -134,6 +134,7 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
         case .jarocin: return 2.8     // frequent obstacles
         case .tunnel: return 9999.0   // none
         case .konin, .zolkiew: return 9999.0 // none
+        case .prolog: return 9999.0
         }
     }
     
@@ -146,12 +147,14 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var targetDistance: Double {
         switch self {
-        case .krotoszyn: return 200.0
+        case .krotoszyn: return 300.0
         case .kozmin: return 320.0
-        case .jarocin: return 1000.0
+        case .jarocin: return 1280.0
         case .tunnel: return 360.0
         case .konin: return 500.0
         case .zolkiew: return 0.0
+        case .prolog: return 9999.0
+
         }
     }
 }

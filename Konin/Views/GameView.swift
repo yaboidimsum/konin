@@ -172,16 +172,16 @@ struct GameView: View {
         case .prolog:
             break
         case .krotoszyn:
-            if dist >= 20.0 && dist <= 110.0 {
+            if dist >= 160.0 && dist <= 250.0 {
                 return "John: \"The furnace is hungry. Keep stoking coal (Space) to maintain speed.\""
-            } else if dist >= 180.0 && dist <= 270.0 {
+            } else if dist >= 260.0 && dist <= 300.0 {
                 return "John: \"Krotoszyn is fading behind us. We are heading east into the unknown.\""
             }
         case .kozmin:
             if dist >= 40.0 && dist <= 130.0 {
-                return "John: \"Three rails ahead! Use A/D to switch lanes, W to snap back to center.\""
-            } else if dist >= 260.0 && dist <= 350.0 {
-                return "John: \"The tracks are worse here... left, center, right — choose wisely.\""
+                return "John: \"Mines on the tracks ahead! Use A/D to switch lanes, W to snap back to center.\""
+            } else if dist >= 200.0 && dist <= 290.0 {
+                return "John: \"German Tellermines and Stockmines... one wrong move will blow us off the rails!\""
             }
         case .jarocin:
             if dist >= 50.0 && dist <= 140.0 {
