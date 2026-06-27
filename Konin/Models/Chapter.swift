@@ -14,6 +14,19 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     case konin = "Konin"
     case zolkiew = "Żółkiew"
     
+    var isGhostSegment: Bool {
+        switch self {
+        case .tunnel, .konin, .zolkiew: return true
+        default: return false
+        }
+    }
+
+    typealias CaptionRange = (min: Double, max: Double, text: String)
+
+    var captionRanges: [CaptionRange] {
+        return []
+    }
+    
     var title: String {
         switch self {
         case .prolog: return "Prologue"
