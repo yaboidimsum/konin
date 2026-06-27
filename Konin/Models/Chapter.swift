@@ -146,10 +146,9 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
     
     var targetDistance: Double {
         switch self {
-        case .prolog: return 0.0
-        case .krotoszyn: return 320.0
-        case .kozmin: return 480.0
-        case .jarocin: return 1280.0
+        case .krotoszyn: return 200.0
+        case .kozmin: return 320.0
+        case .jarocin: return 1000.0
         case .tunnel: return 360.0
         case .konin: return 500.0
         case .zolkiew: return 0.0
