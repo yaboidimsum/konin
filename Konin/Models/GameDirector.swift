@@ -11,30 +11,33 @@ import SwiftUI
 @Observable
 final class GameDirector {
     static let shared = GameDirector()
-    
+
     var currentState: GameState = .menu
     var activeChapter: Chapter = .krotoszyn
     var coalPercentage: Double = 100.0
     var distanceTravelled: Double = 0.0
-    
+
     let audio = SynthAudioEngine.shared
-    
+
     /// Weak reference to the active GameScene so we can trigger the cinematic fail fade.
     weak var activeScene: GameScene?
-    
-    init() {
+
+    private init() {
         audio.start()
         audio.startMenuMusic()
     }
-    
+
+    // MARK: - State Machine
+
     func changeState(to newState: GameState) {
         currentState = newState
-        
+
         if newState != .menu {
             audio.stopMenuMusic(duration: 1.5)
         }
-        
+
         switch newState {
+
         case .menu:
             audio.stop()
             audio.start()
@@ -42,8 +45,18 @@ final class GameDirector {
             audio.setChapter(.krotoszyn)
             audio.setSpeedRatio(1.0)
             audio.startMenuMusic()
+
         case .loading:
             break
+
+        case .cutscene(let chapter):
+            // Cutscenes play before a chapter's story/bridge screen.
+            // Currently only .prolog has a cutscene.
+            activeChapter = chapter
+            audio.setChapter(chapter)
+            audio.startIntroJohn()
+            audio.setSpeedRatio(0.0)
+
         case .story(let chapter):
             activeChapter = chapter
             audio.setChapter(chapter)
@@ -53,6 +66,7 @@ final class GameDirector {
                 audio.setAmbienceActive(false)
             }
             audio.setSpeedRatio(0.3)
+
         case .playing(let chapter):
             activeChapter = chapter
             coalPercentage = 100.0
@@ -62,58 +76,96 @@ final class GameDirector {
                 audio.stopIntroJohn(duration: 4.0)
             }
             audio.setAmbienceActive(true)
-            audio.setSpeedRatio(1.0)
+            audio.setSpeedRatio(chapter.isGhostSegment ? 0.6 : 1.0)
+
         case .failed:
             audio.setSpeedRatio(0.0)
             audio.setSirenActive(false)
             audio.setAmbienceActive(false)
+
         case .ending:
             audio.setChapter(.zolkiew)
             audio.setAmbienceActive(false)
             audio.setSpeedRatio(0.0)
+
         case .credits:
             audio.setChapter(.zolkiew)
             audio.setAmbienceActive(false)
             audio.setSpeedRatio(0.0)
         }
     }
-    
+
+    // MARK: - Navigation Helpers
+
+    // Full game flow:
+    //
+    //   .menu
+    //     → .loading
+    //     → .cutscene(.prolog)          ← cinematic opening (6 scenes)
+    //     → .story(.krotoszyn)          ← bridge text "the sky turned red..."
+    //     → .playing(.krotoszyn)
+    //     → .story(.kozmin)             ← bridge text "Krotoszyn has crumbled..."
+    //     → .playing(.kozmin)
+    //     → .story(.jarocin)
+    //     → .playing(.jarocin)
+    //     → .story(.tunnel)             ← triggered by explosion, not chapter complete
+    //     → .playing(.tunnel)
+    //     → .story(.konin)
+    //     → .playing(.konin)
+    //     → .story(.zolkiew)
+    //     → .playing(.zolkiew)
+    //     → .ending
+    //     → .credits
+
+    /// Called by LoadingView once assets are ready.
     func startGame() {
-        changeState(to: .loading)
+        changeState(to: .cutscene(.prolog))
     }
-    
-    func advanceFromStory(_ chapter: Chapter) {
-        if chapter == .prolog {
+
+    /// Called when a cutscene finishes (player taps through all scenes).
+    func advanceFromCutscene(_ chapter: Chapter) {
+        switch chapter {
+        case .prolog:
+            // Prolog cutscene → Chapter 1 bridge text
             changeState(to: .story(.krotoszyn))
-        } else {
-            changeState(to: .playing(chapter))
+        default:
+            // Future cutscenes for other chapters go to their story screen
+            changeState(to: .story(chapter))
         }
     }
-    
-    func retryChapter(_ chapter: Chapter) {
-        changeState(to: .story(chapter))
+
+    /// Called when the player taps "continue" on a StoryView.
+    func advanceFromStory(_ chapter: Chapter) {
+        changeState(to: .playing(chapter))
     }
-    
+
+    /// Called when a chapter's gameplay is successfully completed.
     func completeChapter(_ chapter: Chapter) {
         withAnimation(.easeInOut(duration: 1.5)) {
             if let nextChapter = chapter.next {
-                changeState(to: .playing(nextChapter))
+                changeState(to: .story(nextChapter))
             } else {
                 changeState(to: .ending)
             }
         }
     }
-    
+
+    /// Called from FailView when the player chooses to retry.
+    func retryChapter(_ chapter: Chapter) {
+        changeState(to: .story(chapter))
+    }
+
+    // MARK: - Coal Management
+
     func updateCoal(_ amount: Double) {
         coalPercentage = max(0.0, min(100.0, coalPercentage + amount))
         if coalPercentage <= 0.0 {
             triggerFail()
         }
     }
-    
-    /// Initiates the cinematic fail sequence.
-    /// If a scene is available, it animates the fade-to-black inside the scene first,
-    /// then the scene callback dispatches changeState(.failed). Otherwise falls back directly.
+
+    // MARK: - Fail Sequence
+
     private func triggerFail() {
         if let scene = activeScene {
             scene.triggerFailFade(chapter: activeChapter)

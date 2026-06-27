@@ -49,6 +49,8 @@ struct ContentView: View {
             case .credits:
                 EndingView()
                     .transition(.opacity)
+            case .cutscene(let chapter):
+                CutsceneView(chapter: chapter)
             }
         }
         .frame(minWidth: 800, minHeight: 600)
