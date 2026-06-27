@@ -94,7 +94,7 @@ final class GameScene: SKScene {
     private var furnaceFire: SKSpriteNode!
     private var coalMeterLabel: SKLabelNode!
     private var coalMeterFill: SKSpriteNode!
-
+    
     // Cockpit Instruments
     private var speedNeedle: SKSpriteNode!
     private var pressureNeedle: SKSpriteNode!
@@ -103,11 +103,11 @@ final class GameScene: SKScene {
     private var odometerLabel: SKLabelNode!
     private var pressureWarningLight: SKSpriteNode!
     private var speedLabel: SKLabelNode!
-
+    
     // Dial constants
     private let dialStartAngle: CGFloat = -.pi * 0.75
     private let dialSweep: CGFloat = .pi * 1.5
-
+    
     // Scrolling Environment
     private var environmentNode: EnvironmentNode?
     
@@ -153,7 +153,7 @@ final class GameScene: SKScene {
         start(chapter: activeChapter)
         
         // Setup keyboard event monitor to capture keys reliably on macOS
-        #if os(macOS)
+#if os(macOS)
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
             guard let self = self, self.isConfigured else { return event }
             let handled: Bool
@@ -166,12 +166,12 @@ final class GameScene: SKScene {
             }
             return handled ? nil : event
         }
-        #endif
+#endif
         
         // Direct focus for keyboard events
-        #if os(macOS)
+#if os(macOS)
         view.window?.makeFirstResponder(self)
-        #endif
+#endif
     }
     
     func start(chapter: Chapter) {
@@ -180,7 +180,7 @@ final class GameScene: SKScene {
         isWaitingToStart = true
         
         // Reset — startup ramp, begin at center lane
-        trainController.resetStartup() 
+        trainController.resetStartup()
         trainController.currentLane = 1
         trainController.targetLane = 1
         trainController.visualOffset = 0.0     // center lane = 0 offset
@@ -244,12 +244,12 @@ final class GameScene: SKScene {
             GameDirector.shared.activeScene = nil
         }
         
-        #if os(macOS)
+#if os(macOS)
         if let monitor = keyMonitor {
             NSEvent.removeMonitor(monitor)
             keyMonitor = nil
         }
-        #endif
+#endif
     }
     
     private func setupBackground() {
@@ -306,11 +306,11 @@ final class GameScene: SKScene {
         failOverlay.zPosition = 50.0
         failOverlay.alpha = 1.0
         addChild(failOverlay)
-
+        
         // Scrolling environment (trees, telegraph poles, parallaxes)
         setupEnvironmentNode()
     }
-
+    
     
     private func setupCitySilhouette() {
         let node = SKNode()
@@ -480,7 +480,7 @@ final class GameScene: SKScene {
                         let wx = (rng.nextFloat() - 0.5) * w * 0.6
                         let wy = rng.nextFloat() * h * 0.6 + h * 0.1
                         let dot = SKSpriteNode(color: SKColor(red: 1.0, green: 0.9, blue: 0.5, alpha: 0.6),
-                                              size: CGSize(width: 3, height: 3))
+                                               size: CGSize(width: 3, height: 3))
                         dot.position = CGPoint(x: wx, y: wy)
                         dot.zPosition = 0.1
                         building.addChild(dot)
@@ -559,18 +559,18 @@ final class GameScene: SKScene {
             node.addChild(win)
         }
     }
-
+    
     // MARK: - Scrolling Environment
-
+    
     private func setupEnvironmentNode() {
         let env = EnvironmentNode(sceneSize: size, horizonY: horizonY)
         env.zPosition = 2.5
         addChild(env)
         self.environmentNode = env
     }
-
+    
     private func setupTracksAndRails() {
-
+        
         let centerX = size.width / 2
         let bottomY: CGFloat = 180.0
         
@@ -679,7 +679,7 @@ final class GameScene: SKScene {
         let hw = size.width / 2
         let hh = size.height / 2
         let dashH: CGFloat = 230
-
+        
         // ── 1. COCKPIT TEXTURED BACKGROUND ────────────────────────────────────
         let cockpitTexture = SKTexture(imageNamed: "train-cockpit")
         cockpitTexture.filteringMode = .nearest
@@ -687,7 +687,7 @@ final class GameScene: SKScene {
         cockpitBg.position = .zero
         cockpitBg.zPosition = 9.9
         cockpit.addChild(cockpitBg)
-
+        
         // ── 2. DASHBOARD BODY ─────────────────────────────────────────────────
         dashboardNode = SKSpriteNode(
             color: .clear,
@@ -696,37 +696,37 @@ final class GameScene: SKScene {
         dashboardNode.position = CGPoint(x: 0, y: -hh)
         dashboardNode.zPosition = 10.0
         cockpit.addChild(dashboardNode)
-
+        
         // ── 3. FURNACE DOOR (left of centre) ─────────────────────────────────
         let furnaceX: CGFloat = -size.width * 0.17
         let furnaceY: CGFloat = 108
-
+        
         let doorFrame = SKSpriteNode(color: SKColor(red: 0.20, green: 0.14, blue: 0.11, alpha: 1.0),
-                                      size: CGSize(width: 162, height: 116))
+                                     size: CGSize(width: 162, height: 116))
         doorFrame.position = CGPoint(x: furnaceX, y: furnaceY)
         doorFrame.zPosition = 11.0
         dashboardNode.addChild(doorFrame)
-
+        
         furnaceDoor = SKSpriteNode(color: SKColor(red: 0.11, green: 0.08, blue: 0.07, alpha: 1.0),
-                                    size: CGSize(width: 142, height: 96))
+                                   size: CGSize(width: 142, height: 96))
         furnaceDoor.position = .zero
         furnaceDoor.zPosition = 0.1
         doorFrame.addChild(furnaceDoor)
-
+        
         furnaceFire = SKSpriteNode(color: .orange, size: CGSize(width: 108, height: 70))
         furnaceFire.position = .zero
         furnaceFire.zPosition = 10.9
         furnaceFire.blendMode = .add
         furnaceDoor.addChild(furnaceFire)
-
+        
         for hx: CGFloat in [-72, 72] {
             let hinge = SKSpriteNode(color: SKColor(white: 0.38, alpha: 1.0),
-                                      size: CGSize(width: 10, height: 30))
+                                     size: CGSize(width: 10, height: 30))
             hinge.position = CGPoint(x: hx, y: 0)
             hinge.zPosition = 11.2
             doorFrame.addChild(hinge)
         }
-
+        
         let fuelTitle = SKLabelNode(text: "FURNACE")
         fuelTitle.fontName = "CourierNewPS-BoldMT"
         fuelTitle.fontSize = 9
@@ -734,26 +734,26 @@ final class GameScene: SKScene {
         fuelTitle.position = CGPoint(x: furnaceX, y: furnaceY - 68)
         fuelTitle.zPosition = 11.5
         dashboardNode.addChild(fuelTitle)
-
+        
         // ── 4. COAL FUEL BAR ─────────────────────────────────────────────────
         let barW: CGFloat = 148
         let barX = furnaceX
         let barY: CGFloat = 44
-
+        
         let gaugeBG = SKSpriteNode(color: SKColor(white: 0.05, alpha: 1.0),
-                                    size: CGSize(width: barW, height: 12))
+                                   size: CGSize(width: barW, height: 12))
         gaugeBG.position = CGPoint(x: barX, y: barY)
         gaugeBG.zPosition = 11.0
         dashboardNode.addChild(gaugeBG)
-
+        
         for tick in [0.25, 0.5, 0.75] {
             let t = SKSpriteNode(color: SKColor(white: 0.30, alpha: 1.0),
-                                  size: CGSize(width: 1, height: 16))
+                                 size: CGSize(width: 1, height: 16))
             t.position = CGPoint(x: (CGFloat(tick) - 0.5) * barW, y: 0)
             t.zPosition = 0.2
             gaugeBG.addChild(t)
         }
-
+        
         coalMeterFill = SKSpriteNode(
             color: SKColor(red: 0.88, green: 0.28, blue: 0.08, alpha: 1.0),
             size: CGSize(width: barW - 4, height: 8))
@@ -761,7 +761,7 @@ final class GameScene: SKScene {
         coalMeterFill.position = CGPoint(x: -(barW - 4) / 2, y: 0)
         coalMeterFill.zPosition = 11.1
         gaugeBG.addChild(coalMeterFill)
-
+        
         coalMeterLabel = SKLabelNode(text: "FUEL")
         coalMeterLabel.fontName = "CourierNewPS-BoldMT"
         coalMeterLabel.fontSize = 9
@@ -770,24 +770,24 @@ final class GameScene: SKScene {
         coalMeterLabel.position = CGPoint(x: barX - barW / 2, y: barY + 9)
         coalMeterLabel.zPosition = 11.2
         dashboardNode.addChild(coalMeterLabel)
-
+        
         // ── 5. SPEEDOMETER DIAL (right of centre) ─────────────────────────────
         let spdX: CGFloat = size.width * 0.16
         let spdY: CGFloat = 114
         let dialR: CGFloat = 52
-
+        
         speedometerBG = makeDialBackground(radius: dialR,
-                                            fill: SKColor(red: 0.07, green: 0.07, blue: 0.09, alpha: 1.0),
-                                            ring: SKColor(white: 0.30, alpha: 1.0))
+                                           fill: SKColor(red: 0.07, green: 0.07, blue: 0.09, alpha: 1.0),
+                                           ring: SKColor(white: 0.30, alpha: 1.0))
         speedometerBG.position = CGPoint(x: spdX, y: spdY)
         speedometerBG.zPosition = 11.0
         dashboardNode.addChild(speedometerBG)
-
+        
         addDialTicks(to: speedometerBG, radius: dialR - 6, count: 9, length: 8,
                      color: SKColor(white: 0.55, alpha: 1.0))
         addDialTicks(to: speedometerBG, radius: dialR - 6, count: 41, length: 4,
                      color: SKColor(white: 0.28, alpha: 1.0))
-
+        
         // Speed labels: 0, 20, 40, 60, 80 km/h
         for (i, val) in [(0, "0"), (2, "20"), (4, "40"), (6, "60"), (8, "80")] {
             let angle = dialStartAngle + CGFloat(i) / 8.0 * dialSweep
@@ -802,19 +802,19 @@ final class GameScene: SKScene {
             lbl.zPosition = 0.3
             speedometerBG.addChild(lbl)
         }
-
+        
         let spdCentre = makeDialBackground(radius: 5, fill: SKColor(white: 0.55, alpha: 1.0), ring: .clear)
         spdCentre.zPosition = 0.5
         speedometerBG.addChild(spdCentre)
-
+        
         speedNeedle = SKSpriteNode(color: SKColor(red: 1.0, green: 0.22, blue: 0.08, alpha: 1.0),
-                                    size: CGSize(width: 3, height: dialR - 10))
+                                   size: CGSize(width: 3, height: dialR - 10))
         speedNeedle.anchorPoint = CGPoint(x: 0.5, y: 0.0)
         speedNeedle.position = .zero
         speedNeedle.zPosition = 0.4
         speedNeedle.zRotation = dialStartAngle + .pi / 2
         speedometerBG.addChild(speedNeedle)
-
+        
         let spdTitle = SKLabelNode(text: "SPEED")
         spdTitle.fontName = "CourierNewPS-BoldMT"
         spdTitle.fontSize = 7
@@ -822,7 +822,7 @@ final class GameScene: SKScene {
         spdTitle.position = CGPoint(x: 0, y: -dialR + 13)
         spdTitle.zPosition = 0.3
         speedometerBG.addChild(spdTitle)
-
+        
         speedLabel = SKLabelNode(text: "0")
         speedLabel.fontName = "CourierNewPS-BoldMT"
         speedLabel.fontSize = 11
@@ -832,12 +832,12 @@ final class GameScene: SKScene {
         speedLabel.position = CGPoint(x: 0, y: -12)
         speedLabel.zPosition = 0.4
         speedometerBG.addChild(speedLabel)
-
+        
         // ── 6. BOILER PRESSURE DIAL (far left) ───────────────────────────────
         let presX: CGFloat = -size.width * 0.30
         let presY: CGFloat = 144
         let presR: CGFloat = 38
-
+        
         pressureGaugeBG = makeDialBackground(
             radius: presR,
             fill: SKColor(red: 0.06, green: 0.06, blue: 0.08, alpha: 1.0),
@@ -845,14 +845,14 @@ final class GameScene: SKScene {
         pressureGaugeBG.position = CGPoint(x: presX, y: presY)
         pressureGaugeBG.zPosition = 11.0
         dashboardNode.addChild(pressureGaugeBG)
-
+        
         addDialTicks(to: pressureGaugeBG, radius: presR - 5, count: 7, length: 6,
                      color: SKColor(white: 0.48, alpha: 1.0))
-
+        
         let presCentre = makeDialBackground(radius: 4, fill: SKColor(white: 0.45, alpha: 1.0), ring: .clear)
         presCentre.zPosition = 0.5
         pressureGaugeBG.addChild(presCentre)
-
+        
         pressureNeedle = SKSpriteNode(
             color: SKColor(red: 0.25, green: 0.82, blue: 1.0, alpha: 1.0),
             size: CGSize(width: 2.5, height: presR - 7))
@@ -861,7 +861,7 @@ final class GameScene: SKScene {
         pressureNeedle.zPosition = 0.4
         pressureNeedle.zRotation = dialStartAngle + .pi / 2
         pressureGaugeBG.addChild(pressureNeedle)
-
+        
         let presTitle = SKLabelNode(text: "BOILER")
         presTitle.fontName = "CourierNewPS-BoldMT"
         presTitle.fontSize = 7
@@ -869,20 +869,20 @@ final class GameScene: SKScene {
         presTitle.position = CGPoint(x: 0, y: -presR + 9)
         presTitle.zPosition = 0.3
         pressureGaugeBG.addChild(presTitle)
-
+        
         // ── 7. ODOMETER DISPLAY ───────────────────────────────────────────────
         let odomBorder = SKSpriteNode(color: SKColor(white: 0.22, alpha: 1.0),
-                                       size: CGSize(width: 116, height: 30))
+                                      size: CGSize(width: 116, height: 30))
         odomBorder.position = CGPoint(x: spdX, y: 44)
         odomBorder.zPosition = 11.0
         dashboardNode.addChild(odomBorder)
-
+        
         let odomBG = SKSpriteNode(color: SKColor(red: 0.05, green: 0.06, blue: 0.06, alpha: 1.0),
-                                   size: CGSize(width: 112, height: 26))
+                                  size: CGSize(width: 112, height: 26))
         odomBG.position = .zero
         odomBG.zPosition = 0.1
         odomBorder.addChild(odomBG)
-
+        
         odometerLabel = SKLabelNode(text: "0000 m")
         odometerLabel.fontName = "CourierNewPS-BoldMT"
         odometerLabel.fontSize = 12
@@ -892,7 +892,7 @@ final class GameScene: SKScene {
         odometerLabel.position = .zero
         odometerLabel.zPosition = 0.3
         odomBG.addChild(odometerLabel)
-
+        
         let odomTitle = SKLabelNode(text: "DIST")
         odomTitle.fontName = "CourierNewPS-BoldMT"
         odomTitle.fontSize = 8
@@ -900,7 +900,7 @@ final class GameScene: SKScene {
         odomTitle.position = CGPoint(x: spdX, y: 33)
         odomTitle.zPosition = 11.1
         dashboardNode.addChild(odomTitle)
-
+        
         // ── 8. OVERHEAT WARNING LIGHT ─────────────────────────────────────────
         pressureWarningLight = makeDialBackground(
             radius: 9,
@@ -910,7 +910,7 @@ final class GameScene: SKScene {
         pressureWarningLight.zPosition = 11.0
         pressureWarningLight.alpha = 0.3
         dashboardNode.addChild(pressureWarningLight)
-
+        
         let warnLbl = SKLabelNode(text: "!")
         warnLbl.fontName = "CourierNewPS-BoldMT"
         warnLbl.fontSize = 10
@@ -919,7 +919,7 @@ final class GameScene: SKScene {
         warnLbl.horizontalAlignmentMode = .center
         warnLbl.zPosition = 0.2
         pressureWarningLight.addChild(warnLbl)
-
+        
         // ── 9. WHITE TRANSITION OVERLAY (on camera, not cockpitNode) ─────────
         whiteTransitionOverlay = SKSpriteNode(color: .white, size: size)
         whiteTransitionOverlay.position = .zero
@@ -935,9 +935,9 @@ final class GameScene: SKScene {
             camera.addChild(vignetteNode)
         }
     }
-
+    
     // MARK: - Dial Helpers
-
+    
     private func makeDialBackground(radius: CGFloat, fill: SKColor, ring: SKColor) -> SKSpriteNode {
         let node = SKSpriteNode(color: fill, size: CGSize(width: radius * 2, height: radius * 2))
         if ring != .clear {
@@ -947,7 +947,7 @@ final class GameScene: SKScene {
         }
         return node
     }
-
+    
     private func addDialTicks(to parent: SKNode, radius: CGFloat, count: Int, length: CGFloat, color: SKColor) {
         for i in 0..<count {
             let angle = dialStartAngle + CGFloat(i) / CGFloat(count - 1) * dialSweep
@@ -960,7 +960,7 @@ final class GameScene: SKScene {
             parent.addChild(tick)
         }
     }
-
+    
     
     private func createLineNode(from: CGPoint, to: CGPoint, color: SKColor, width: CGFloat) -> SKSpriteNode {
         let dx = to.x - from.x
@@ -986,7 +986,7 @@ final class GameScene: SKScene {
         line.size = CGSize(width: width, height: length)
         line.zRotation = angle - .pi / 2
     }
-
+    
     
     private func applyChapterStyling(_ chapter: Chapter) {
         // Toggle city silhouette visibility based on active chapter (Always hidden to remove placeholder "big x")
@@ -1058,16 +1058,9 @@ final class GameScene: SKScene {
             headlightBeam.alpha = 0.25
             updateRailsColor(.darkGray)
         case .konin:
-            // Dreamy sunrise (Peach bottom to Pastel Blue top)
-            let skySize = CGSize(width: size.width * 2, height: size.height - horizonY)
-            let topColor = SKColor(red: 0.65, green: 0.76, blue: 0.97, alpha: 1.0)
-            let bottomColor = SKColor(red: 0.97, green: 0.79, blue: 0.65, alpha: 1.0)
-            if let gradTexture = createSkyGradientTexture(size: skySize, topColor: topColor, bottomColor: bottomColor) {
-                skyNode.texture = gradTexture
-                skyNode.color = .white
-            } else {
-                skyNode.color = topColor
-            }
+            let tex = SKTexture(imageNamed: "horizon-4")
+            tex.filteringMode = .nearest
+            setupTiledHorizon(texture: tex, backgroundColor: SKColor(red: 66.0/255.0, green: 94.0/255.0, blue: 115.0/255.0, alpha: 1.0))
             groundNode.color = SKColor(red: 0.45, green: 0.65, blue: 0.45, alpha: 1.0)
             horizonLine.color = SKColor(red: 0.6, green: 0.7, blue: 0.7, alpha: 1.0)
             tunnelDarkness.alpha = 0.0
@@ -1392,12 +1385,12 @@ final class GameScene: SKScene {
     private func updateGauges() {
         let coalPercent = GameDirector.shared.coalPercentage
         let speed = trainController.speed
-
+        
         // ── Fuel bar ───────────────────────────────────────────────────────
         let barW: CGFloat = 144
         let fuelWidth = barW * CGFloat(coalPercent / 100.0)
         coalMeterFill.size.width = max(1, fuelWidth)
-
+        
         if coalPercent <= 25.0 {
             let pulse = sin(Date().timeIntervalSince1970 * 10.0) > 0.0
             coalMeterFill.color = pulse ? .red : SKColor(red: 1.0, green: 0.4, blue: 0.0, alpha: 1.0)
@@ -1409,12 +1402,12 @@ final class GameScene: SKScene {
             coalMeterFill.color = SKColor(red: 0.88, green: 0.28, blue: 0.08, alpha: 1.0)
             coalMeterLabel.fontColor = SKColor(white: 0.55, alpha: 1.0)
         }
-
+        
         // ── Furnace fire flicker ───────────────────────────────────────────
         let fireIntensity = 0.5 + 0.5 * CGFloat(coalPercent / 100.0)
         let flicker = CGFloat.random(in: -0.06...0.06)
         furnaceFire.alpha = max(0, min(1, fireIntensity + flicker))
-
+        
         // ── Speedometer needle (smooth) ────────────────────────────────────
         let maxSpeed: Double = 80.0  // km/h top of dial
         let speedKmh = speed * 2.2   // rough m/s → km/h
@@ -1422,12 +1415,12 @@ final class GameScene: SKScene {
         let targetSpdAngle = dialStartAngle + speedNorm * dialSweep + .pi / 2
         speedNeedle.zRotation += (targetSpdAngle - speedNeedle.zRotation) * 0.08
         speedLabel.text = "\(Int(speedKmh))"
-
+        
         // ── Boiler pressure needle (very slow — sluggish like real steam) ──
         let pressureNorm = CGFloat(min(coalPercent / 100.0, 1.0))
         let targetPresAngle = dialStartAngle + pressureNorm * dialSweep + .pi / 2
         pressureNeedle.zRotation += (targetPresAngle - pressureNeedle.zRotation) * 0.012
-
+        
         // ── Overheat warning light ─────────────────────────────────────────
         if coalPercent <= 10.0 {
             let flash = sin(Date().timeIntervalSince1970 * 8.0) > 0.0
@@ -1435,15 +1428,15 @@ final class GameScene: SKScene {
         } else {
             pressureWarningLight.alpha = 0.3
         }
-
+        
         // ── Odometer ──────────────────────────────────────────────────────
         let dist = Int(trainController.distanceTravelled)
         odometerLabel.text = String(format: "%04d m", dist)
     }
-
+    
     
     // Keyboard Event Handling (macOS Responder methods)
-    #if os(macOS)
+#if os(macOS)
     override func keyDown(with event: NSEvent) {
         _ = handleKeyDown(keyCode: event.keyCode, characters: event.charactersIgnoringModifiers)
     }
@@ -1456,12 +1449,29 @@ final class GameScene: SKScene {
         guard isConfigured else { return false }
         
         let normalizedKey = characters?.lowercased()
+        let isEscapeOrP = (keyCode == 53 || keyCode == 35 || normalizedKey == "p")
+        
+        // If already paused, only allow unpausing via Esc/P
+        if GameDirector.shared.isPaused {
+            if isEscapeOrP {
+                GameDirector.shared.isPaused = false
+                return true
+            }
+            return false
+        }
+        
         if keyCode == 4 || normalizedKey == "h" {
             SynthAudioEngine.shared.playHonk()
             return true
         }
         
         guard !isWaitingToStart else { return false }
+        
+        // Allow pausing during active gameplay
+        if isEscapeOrP {
+            GameDirector.shared.isPaused = true
+            return true
+        }
         
         switch keyCode {
         case 0, 123: // A / Left Arrow — shift one lane left
@@ -1490,6 +1500,7 @@ final class GameScene: SKScene {
     
     private func handleKeyUp(keyCode: UInt16) -> Bool {
         guard isConfigured && !isWaitingToStart else { return false }
+        guard !GameDirector.shared.isPaused else { return false }
         
         switch keyCode {
         case 1, 125: // S / Down Arrow
@@ -1501,7 +1512,7 @@ final class GameScene: SKScene {
         
         return true
     }
-    #endif
+#endif
     
     private func updateKoninTransition(deltaTime: TimeInterval) {
         if activeChapter == .konin {
@@ -1593,461 +1604,472 @@ final class GameScene: SKScene {
         }
     }
     
-    // MARK: - Fail Fade
-    
-    /// Called by GameDirector (via CoalSystem) — smoothly fades to black before switching state
-    func triggerFailFade(chapter: Chapter) {
-        guard !isFadingToFail else { return }
-        isFadingToFail = true
-        
-        // Stop the train grinding to a halt
-        trainController.targetSpeed = 0.0
+    func pauseGame() {
+        self.isPaused = true
         SynthAudioEngine.shared.setSpeedRatio(0.0)
+    }
+    
+    func resumeGame() {
+        self.isPaused = false
+        self.lastUpdateTime = 0.0 // reset to avoid deltaTime jump
+        SynthAudioEngine.shared.setSpeedRatio(Float(trainController.speed / 35.0))
+    }
         
-        // Shake the camera first — train jolts to a stop
-        cameraController.shake(duration: 0.8, intensity: 14)
+        // MARK: - Fail Fade
         
-        // Begin dark red tinge → full black fade
-        failOverlay.color = SKColor(red: 0.15, green: 0.0, blue: 0.0, alpha: 1.0)
-        failOverlay.run(SKAction.sequence([
-            SKAction.fadeAlpha(to: 0.45, duration: 0.6),              // dark red tinge
-            SKAction.colorize(with: .black, colorBlendFactor: 1.0, duration: 0.5),
-            SKAction.fadeAlpha(to: 1.0, duration: 1.2),              // full blackout
-            SKAction.wait(forDuration: 0.4),
-            SKAction.run {
-                DispatchQueue.main.async {
-                    withAnimation(.easeInOut(duration: 1.0)) {
-                        GameDirector.shared.changeState(to: .failed(chapter))
+        /// Called by GameDirector (via CoalSystem) — smoothly fades to black before switching state
+        func triggerFailFade(chapter: Chapter) {
+            guard !isFadingToFail else { return }
+            isFadingToFail = true
+            
+            // Stop the train grinding to a halt
+            trainController.targetSpeed = 0.0
+            SynthAudioEngine.shared.setSpeedRatio(0.0)
+            
+            // Shake the camera first — train jolts to a stop
+            cameraController.shake(duration: 0.8, intensity: 14)
+            
+            // Begin dark red tinge → full black fade
+            failOverlay.color = SKColor(red: 0.15, green: 0.0, blue: 0.0, alpha: 1.0)
+            failOverlay.run(SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.45, duration: 0.6),              // dark red tinge
+                SKAction.colorize(with: .black, colorBlendFactor: 1.0, duration: 0.5),
+                SKAction.fadeAlpha(to: 1.0, duration: 1.2),              // full blackout
+                SKAction.wait(forDuration: 0.4),
+                SKAction.run {
+                    DispatchQueue.main.async {
+                        withAnimation(.easeInOut(duration: 1.0)) {
+                            GameDirector.shared.changeState(to: .failed(chapter))
+                        }
                     }
                 }
-            }
-        ]))
-        
-        // Fade the HUD out to black in sync with the scene
-        DispatchQueue.main.async {
-            withAnimation(.easeInOut(duration: 2.3)) {
-                GameDirector.shared.hudOpacity = 0.0
-            }
-        }
-    }
-    
-    /// Fades the screen to black upon successful chapter completion before transitioning state
-    func triggerChapterSuccessFade(chapter: Chapter) {
-        guard !isFadingToFail else { return }
-        isFadingToFail = true
-        
-        trainController.targetSpeed = 0.0
-        SynthAudioEngine.shared.setSpeedRatio(0.0)
-        
-        failOverlay.color = .black
-        failOverlay.run(SKAction.sequence([
-            SKAction.fadeAlpha(to: 1.0, duration: 1.8),
-            SKAction.wait(forDuration: 0.4),
-            SKAction.run {
-                DispatchQueue.main.async {
-                    GameDirector.shared.completeChapter(chapter)
-                }
-            }
-        ]))
-        
-        // Fade the HUD out to black in sync with the scene
-        DispatchQueue.main.async {
-            withAnimation(.easeInOut(duration: 1.8)) {
-                GameDirector.shared.hudOpacity = 0.0
-            }
-        }
-    }
-    
-    /// Fades the screen to white slowly at the end of the final chapter (Zolkiew)
-    func triggerFinalWhiteFade(duration: TimeInterval, completion: @escaping () -> Void) {
-        guard whiteTransitionOverlay != nil else {
-            completion()
-            return
-        }
-        whiteTransitionOverlay.removeAllActions()
-        whiteTransitionOverlay.alpha = 0.0
-        
-        let fadeToWhite = SKAction.fadeAlpha(to: 1.0, duration: duration)
-        fadeToWhite.timingMode = .easeInEaseOut
-        
-        let completeAction = SKAction.run {
+            ]))
+            
+            // Fade the HUD out to black in sync with the scene
             DispatchQueue.main.async {
+                withAnimation(.easeInOut(duration: 2.3)) {
+                    GameDirector.shared.hudOpacity = 0.0
+                }
+            }
+        }
+        
+        /// Fades the screen to black upon successful chapter completion before transitioning state
+        func triggerChapterSuccessFade(chapter: Chapter) {
+            guard !isFadingToFail else { return }
+            isFadingToFail = true
+            
+            trainController.targetSpeed = 0.0
+            SynthAudioEngine.shared.setSpeedRatio(0.0)
+            
+            failOverlay.color = .black
+            failOverlay.run(SKAction.sequence([
+                SKAction.fadeAlpha(to: 1.0, duration: 1.8),
+                SKAction.wait(forDuration: 0.4),
+                SKAction.run {
+                    DispatchQueue.main.async {
+                        GameDirector.shared.completeChapter(chapter)
+                    }
+                }
+            ]))
+            
+            // Fade the HUD out to black in sync with the scene
+            DispatchQueue.main.async {
+                withAnimation(.easeInOut(duration: 1.8)) {
+                    GameDirector.shared.hudOpacity = 0.0
+                }
+            }
+        }
+        
+        /// Fades the screen to white slowly at the end of the final chapter (Zolkiew)
+        func triggerFinalWhiteFade(duration: TimeInterval, completion: @escaping () -> Void) {
+            guard whiteTransitionOverlay != nil else {
                 completion()
+                return
             }
-        }
-        
-        whiteTransitionOverlay.run(SKAction.sequence([fadeToWhite, completeAction]))
-    }
-    
-    private func updateFailFade(deltaTime: TimeInterval) {
-        // No per-frame work needed — SKAction handles the overlay animation
-    }
-
-    private func updateCityApproach(deltaTime: TimeInterval) {
-        guard activeChapter.targetDistance > 0 else { return }
-        let progress = min(1.0, max(0.0, trainController.distanceTravelled / activeChapter.targetDistance))
-        
-        // Scale starts at 0.70 (very far away, small silhouette) and grows to 1.40 (close)
-        // Opacity starts at 0.0 (completely hidden/hazy) and rises to 1.0 (fully visible)
-        let targetScale = 0.01 + progress * 0.70
-        let targetAlpha = progress
-        
-        if let cityNode = citySilhouette, !cityNode.isHidden {
-            cityNode.alpha = cityNode.alpha + (targetAlpha - cityNode.alpha) * 0.08
+            whiteTransitionOverlay.removeAllActions()
+            whiteTransitionOverlay.alpha = 0.0
             
-            let currentScale = cityNode.xScale
-            let newScale = currentScale + (targetScale - currentScale) * 0.08
-            cityNode.setScale(newScale)
-        }
-        
-        if let skylinesNode = citySkylinesNode, !skylinesNode.isHidden {
-            skylinesNode.alpha = skylinesNode.alpha + (targetAlpha - skylinesNode.alpha) * 0.08
+            let fadeToWhite = SKAction.fadeAlpha(to: 1.0, duration: duration)
+            fadeToWhite.timingMode = .easeInEaseOut
             
-            let currentScale = skylinesNode.xScale
-            let newScale = currentScale + (targetScale - currentScale) * 0.08
-            skylinesNode.setScale(newScale)
-        }
-        
-        // Update center horizon sprite scale (starts small at 0.65, zooms to 1.05 in center)
-        // and fade in based on distance progress
-        if activeChapter == .krotoszyn || activeChapter == .kozmin {
-            let horizonScale = 0.05 + progress * 0.40
-            if let centerNode = skyNode.childNode(withName: "horizon_sprite_center") {
-                centerNode.setScale(horizonScale)
-                centerNode.position = .zero
-                centerNode.alpha = CGFloat(progress)
-            }
-        }
-    }
-
-    private func showChapter1Credits() {
-        // Clean up any existing credit nodes first to prevent overlaps
-        enumerateChildNodes(withName: "chapter_credits") { node, _ in
-            node.removeFromParent()
-        }
-        
-        let credits = [
-            "Awan: Game Design",
-            "Ebi: Illustrator",
-            "Ridwan: Train lover"
-        ]
-        
-        let startDelay: TimeInterval = 6.0
-        let fadeDuration: TimeInterval = 1.0
-        let stayDuration: TimeInterval = 2.5
-        let stepDelay: TimeInterval = fadeDuration * 2.0 + stayDuration + 0.2 // 2.7s per credit
-        
-        for (index, text) in credits.enumerated() {
-            let label = SKLabelNode(fontNamed: "VCR OSD Mono")
-            label.name = "chapter_credits"
-            label.text = text
-            label.fontSize = 24
-            label.fontColor = SKColor(white: 0.95, alpha: 1.0)
-            label.position = CGPoint(x: size.width / 2.0, y: size.height - 200.0)
-            label.zPosition = 90.0
-            label.alpha = 0.0
-            addChild(label)
-            
-            let delayTime = startDelay + Double(index) * stepDelay
-            let sequence = SKAction.sequence([
-                SKAction.wait(forDuration: delayTime),
-                SKAction.fadeIn(withDuration: fadeDuration),
-                SKAction.wait(forDuration: stayDuration),
-                SKAction.fadeOut(withDuration: fadeDuration),
-                SKAction.removeFromParent()
-            ])
-            
-            label.run(sequence)
-        }
-    }
-
-    private func createSkyGradientTexture(size: CGSize, topColor: SKColor, bottomColor: SKColor) -> SKTexture? {
-        let width = Int(size.width)
-        let height = Int(size.height)
-        guard let context = CGContext(data: nil, width: width, height: height,
-                                      bitsPerComponent: 8, bytesPerRow: 0,
-                                      space: CGColorSpaceCreateDeviceRGB(),
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
-            return nil
-        }
-        
-        context.clear(CGRect(origin: .zero, size: size))
-        
-        let colors = [
-            bottomColor.cgColor,
-            topColor.cgColor
-        ] as CFArray
-        
-        let locations: [CGFloat] = [0.0, 1.0]
-        
-        guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                                        colors: colors, locations: locations) else {
-            return nil
-        }
-        
-        let startPoint = CGPoint(x: size.width / 2.0, y: 0.0)
-        let endPoint = CGPoint(x: size.width / 2.0, y: size.height)
-        
-        context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: .drawsAfterEndLocation)
-        
-        guard let cgImage = context.makeImage() else { return nil }
-        return SKTexture(cgImage: cgImage)
-    }
-
-    private func createVignetteTexture(size: CGSize) -> SKTexture? {
-        let width = Int(size.width)
-        let height = Int(size.height)
-        guard let context = CGContext(data: nil, width: width, height: height,
-                                      bitsPerComponent: 8, bytesPerRow: 0,
-                                      space: CGColorSpaceCreateDeviceRGB(),
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
-            return nil
-        }
-        
-        context.clear(CGRect(origin: .zero, size: size))
-        
-        let colors = [
-            CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0),
-            CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0),
-            CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.55),
-            CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.98)
-        ] as CFArray
-        
-        let locations: [CGFloat] = [0.0, 0.35, 0.75, 1.0]
-        
-        guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                                        colors: colors, locations: locations) else {
-            return nil
-        }
-        
-        let center = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
-        let startRadius: CGFloat = 0.0
-        let endRadius: CGFloat = sqrt(pow(size.width / 2.0, 2.0) + pow(size.height / 2.0, 2.0))
-        
-        context.drawRadialGradient(gradient,
-                                   startCenter: center, startRadius: startRadius,
-                                   endCenter: center, endRadius: endRadius,
-                                   options: .drawsAfterEndLocation)
-        
-        guard let cgImage = context.makeImage() else { return nil }
-        return SKTexture(cgImage: cgImage)
-    }
-
-    private func updateHorizonVisuals(deltaTime: TimeInterval) {
-        // 1. Subtle Luftwaffe planes
-        horizonPlaneTimer += deltaTime
-        if horizonPlaneTimer >= nextPlaneTime {
-            horizonPlaneTimer = 0.0
-            nextPlaneTime = Double.random(in: 2.5...5.5) // much more frequent squadron fly-bys
-            spawnSubtleHorizonPlane()
-        }
-        
-        // 2. Anti-aircraft tracers
-        horizonAATimer += deltaTime
-        if horizonAATimer >= nextAATime {
-            horizonAATimer = 0.0
-            nextAATime = Double.random(in: 0.08...0.20) // extremely intense rate of AA fire
-            triggerAAFire()
-        }
-        
-        // 3. Spawning rising smoke plumes from the background city
-        updateSmokePlumes(deltaTime: deltaTime)
-    }
-    
-    private func spawnSubtleHorizonPlane() {
-        let count = Int.random(in: 2...4) // squadrons of 2-4 planes
-        let formationOffsetDir = Bool.random() ? 1.0 : -1.0
-        
-        for i in 0..<count {
-            let plane = SKNode()
-            plane.zPosition = 0.18
-            
-            // Stagger spawn delay or position
-            let delay = Double(i) * Double.random(in: 0.4...0.8)
-            let darkColor = SKColor(white: CGFloat.random(in: 0.10...0.16), alpha: CGFloat.random(in: 0.40...0.65))
-            
-            let body = SKSpriteNode(color: darkColor, size: CGSize(width: 15, height: 4))
-            body.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-            plane.addChild(body)
-            
-            let wing = SKSpriteNode(color: darkColor, size: CGSize(width: 4, height: 11))
-            wing.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-            wing.position = CGPoint(x: -2, y: 0)
-            plane.addChild(wing)
-            
-            let startDelayAction = SKAction.wait(forDuration: delay)
-            let startX: CGFloat = -40
-            let startY = horizonY + CGFloat.random(in: 40...160) + (CGFloat(i) * 15.0 * formationOffsetDir)
-            
-            let setupPos = SKAction.run {
-                plane.position = CGPoint(x: startX, y: startY)
-            }
-            
-            let targetX = size.width + 40
-            let duration = Double.random(in: 11.0...17.0)
-            let move = SKAction.moveTo(x: targetX, duration: duration)
-            let remove = SKAction.removeFromParent()
-            
-            plane.run(SKAction.sequence([
-                startDelayAction,
-                setupPos,
-                move,
-                remove
-            ]))
-            
-            addChild(plane)
-        }
-    }
-    
-    private func triggerAAFire() {
-        let shotsCount = Int.random(in: 2...5) // burst of 2-5 flak shots
-        
-        for i in 0..<shotsCount {
-            let delay = Double(i) * Double.random(in: 0.05...0.15)
-            
-            let fireAction = SKAction.run { [weak self] in
-                guard let self = self else { return }
-                
-                let centerX = self.size.width / 2
-                let startX = centerX + CGFloat.random(in: -450...450)
-                let startY = self.horizonY
-                
-                let targetX = startX + CGFloat.random(in: -120...120)
-                let targetY = self.horizonY + CGFloat.random(in: 120...280)
-                
-                let bullet = SKSpriteNode(color: SKColor(red: 1.0, green: 0.85, blue: 0.35, alpha: 0.95), size: CGSize(width: 3, height: 3))
-                bullet.position = CGPoint(x: startX, y: startY)
-                bullet.zPosition = 0.19
-                self.addChild(bullet)
-                
-                let duration = Double.random(in: 0.20...0.35)
-                let move = SKAction.move(to: CGPoint(x: targetX, y: targetY), duration: duration)
-                
-                let spawnExplosion = SKAction.run { [weak self] in
-                    guard let self = self else { return }
-                    self.spawnFlakExplosion(at: CGPoint(x: targetX, y: targetY))
-                }
-                
-                let remove = SKAction.removeFromParent()
-                bullet.run(SKAction.sequence([move, spawnExplosion, remove]))
-            }
-            
-            self.run(SKAction.sequence([
-                SKAction.wait(forDuration: delay),
-                fireAction
-            ]))
-        }
-    }
-    
-    private func spawnFlakExplosion(at point: CGPoint) {
-        let flakColor = SKColor(white: CGFloat.random(in: 0.14...0.22), alpha: CGFloat.random(in: 0.65...0.85))
-        let flak = SKSpriteNode(color: flakColor, size: CGSize(width: 5, height: 5))
-        flak.position = point
-        flak.zPosition = 0.19
-        addChild(flak)
-        
-        let expand = SKAction.scale(to: CGFloat.random(in: 2.2...3.5), duration: 0.35)
-        let fade = SKAction.fadeOut(withDuration: 0.35)
-        let group = SKAction.group([expand, fade])
-        let remove = SKAction.removeFromParent()
-        
-        flak.run(SKAction.sequence([group, remove]))
-    }
-    
-    private func updateWartimeSky(isWartime: Bool) {
-        if isWartime {
-            if childNode(withName: "wartimeHorizonGlow") == nil {
-                // Warm copper glow at the horizon
-                let glow = SKSpriteNode(color: SKColor(red: 0.85, green: 0.35, blue: 0.15, alpha: 0.45),
-                                        size: CGSize(width: size.width * 2, height: 45))
-                glow.name = "wartimeHorizonGlow"
-                glow.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-                glow.position = CGPoint(x: size.width / 2, y: horizonY)
-                glow.zPosition = 0.02
-                addChild(glow)
-            }
-            
-            if childNode(withName: "wartimeClouds") == nil {
-                let clouds = SKNode()
-                clouds.name = "wartimeClouds"
-                addChild(clouds)
-                
-                let cloudColors = [
-                    SKColor(red: 0.20, green: 0.19, blue: 0.18, alpha: 0.5),
-                    SKColor(red: 0.35, green: 0.33, blue: 0.31, alpha: 0.3),
-                    SKColor(red: 0.24, green: 0.23, blue: 0.22, alpha: 0.4)
-                ]
-                
-                let cloudHeights: [CGFloat] = [12, 18, 15]
-                let cloudYOffsets: [CGFloat] = [15, 60, 110]
-                
-                for i in 0..<3 {
-                    let strip = SKSpriteNode(color: cloudColors[i], size: CGSize(width: size.width * 2.5, height: cloudHeights[i]))
-                    strip.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-                    strip.position = CGPoint(x: size.width / 2, y: horizonY + cloudYOffsets[i])
-                    strip.zPosition = 0.01
-                    clouds.addChild(strip)
+            let completeAction = SKAction.run {
+                DispatchQueue.main.async {
+                    completion()
                 }
             }
-        } else {
-            childNode(withName: "wartimeHorizonGlow")?.removeFromParent()
-            childNode(withName: "wartimeClouds")?.removeFromParent()
-        }
-    }
-    
-    private func updateSmokePlumes(deltaTime: TimeInterval) {
-        smokeSpawnTimer += deltaTime
-        if smokeSpawnTimer >= 0.18 {
-            smokeSpawnTimer = 0.0
             
-            let sources: [CGFloat] = [
-                size.width * 0.2,
-                size.width * 0.32,
-                size.width * 0.48,
-                size.width * 0.65,
-                size.width * 0.82
+            whiteTransitionOverlay.run(SKAction.sequence([fadeToWhite, completeAction]))
+        }
+        
+        private func updateFailFade(deltaTime: TimeInterval) {
+            // No per-frame work needed — SKAction handles the overlay animation
+        }
+        
+        private func updateCityApproach(deltaTime: TimeInterval) {
+            guard activeChapter.targetDistance > 0 else { return }
+            let progress = min(1.0, max(0.0, trainController.distanceTravelled / activeChapter.targetDistance))
+            
+            // Scale starts at 0.70 (very far away, small silhouette) and grows to 1.40 (close)
+            // Opacity starts at 0.0 (completely hidden/hazy) and rises to 1.0 (fully visible)
+            let targetScale = 0.01 + progress * 0.70
+            let targetAlpha = progress
+            
+            if let cityNode = citySilhouette, !cityNode.isHidden {
+                cityNode.alpha = cityNode.alpha + (targetAlpha - cityNode.alpha) * 0.08
+                
+                let currentScale = cityNode.xScale
+                let newScale = currentScale + (targetScale - currentScale) * 0.08
+                cityNode.setScale(newScale)
+            }
+            
+            if let skylinesNode = citySkylinesNode, !skylinesNode.isHidden {
+                skylinesNode.alpha = skylinesNode.alpha + (targetAlpha - skylinesNode.alpha) * 0.08
+                
+                let currentScale = skylinesNode.xScale
+                let newScale = currentScale + (targetScale - currentScale) * 0.08
+                skylinesNode.setScale(newScale)
+            }
+            
+            // Update center horizon sprite scale (starts small at 0.65, zooms to 1.05 in center)
+            // and fade in based on distance progress
+            if activeChapter == .krotoszyn || activeChapter == .kozmin || activeChapter == .konin {
+                let horizonScale = 0.05 + progress * 0.40
+                if let centerNode = skyNode.childNode(withName: "horizon_sprite_center") {
+                    centerNode.setScale(horizonScale)
+                    centerNode.position = .zero
+                    centerNode.alpha = CGFloat(progress)
+                }
+            }
+        }
+        
+        private func showChapter1Credits() {
+            // Clean up any existing credit nodes first to prevent overlaps
+            enumerateChildNodes(withName: "chapter_credits") { node, _ in
+                node.removeFromParent()
+            }
+            
+            let credits = [
+                "Awan: Game Design",
+                "Ebi: Illustrator",
+                "Ridwan: Train lover"
             ]
-            let startX = sources.randomElement()!
             
-            let sizeVal = CGFloat.random(in: 4...8)
-            let puff = SKSpriteNode(color: SKColor(red: 0.18, green: 0.17, blue: 0.16, alpha: 0.6), size: CGSize(width: sizeVal, height: sizeVal))
-            puff.position = CGPoint(x: startX, y: horizonY + CGFloat.random(in: 0...5))
-            puff.zPosition = 0.12
-            addChild(puff)
+            let startDelay: TimeInterval = 6.0
+            let fadeDuration: TimeInterval = 1.0
+            let stayDuration: TimeInterval = 2.5
+            let stepDelay: TimeInterval = fadeDuration * 2.0 + stayDuration + 0.2 // 2.7s per credit
             
-            let duration = Double.random(in: 5.5...9.0)
-            let moveUp = SKAction.moveBy(x: -CGFloat.random(in: 35...80), y: CGFloat.random(in: 80...160), duration: duration)
-            let scaleUp = SKAction.scale(to: CGFloat.random(in: 3.5...6.0), duration: duration)
-            let fadeOut = SKAction.fadeOut(withDuration: duration)
+            for (index, text) in credits.enumerated() {
+                let label = SKLabelNode(fontNamed: "VCR OSD Mono")
+                label.name = "chapter_credits"
+                label.text = text
+                label.fontSize = 24
+                label.fontColor = SKColor(white: 0.95, alpha: 1.0)
+                label.position = CGPoint(x: size.width / 2.0, y: size.height - 200.0)
+                label.zPosition = 90.0
+                label.alpha = 0.0
+                addChild(label)
+                
+                let delayTime = startDelay + Double(index) * stepDelay
+                let sequence = SKAction.sequence([
+                    SKAction.wait(forDuration: delayTime),
+                    SKAction.fadeIn(withDuration: fadeDuration),
+                    SKAction.wait(forDuration: stayDuration),
+                    SKAction.fadeOut(withDuration: fadeDuration),
+                    SKAction.removeFromParent()
+                ])
+                
+                label.run(sequence)
+            }
+        }
+        
+        private func createSkyGradientTexture(size: CGSize, topColor: SKColor, bottomColor: SKColor) -> SKTexture? {
+            let width = Int(size.width)
+            let height = Int(size.height)
+            guard let context = CGContext(data: nil, width: width, height: height,
+                                          bitsPerComponent: 8, bytesPerRow: 0,
+                                          space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+                return nil
+            }
+            
+            context.clear(CGRect(origin: .zero, size: size))
+            
+            let colors = [
+                bottomColor.cgColor,
+                topColor.cgColor
+            ] as CFArray
+            
+            let locations: [CGFloat] = [0.0, 1.0]
+            
+            guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                            colors: colors, locations: locations) else {
+                return nil
+            }
+            
+            let startPoint = CGPoint(x: size.width / 2.0, y: 0.0)
+            let endPoint = CGPoint(x: size.width / 2.0, y: size.height)
+            
+            context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: .drawsAfterEndLocation)
+            
+            guard let cgImage = context.makeImage() else { return nil }
+            return SKTexture(cgImage: cgImage)
+        }
+        
+        private func createVignetteTexture(size: CGSize) -> SKTexture? {
+            let width = Int(size.width)
+            let height = Int(size.height)
+            guard let context = CGContext(data: nil, width: width, height: height,
+                                          bitsPerComponent: 8, bytesPerRow: 0,
+                                          space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+                return nil
+            }
+            
+            context.clear(CGRect(origin: .zero, size: size))
+            
+            let colors = [
+                CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0),
+                CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0),
+                CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.55),
+                CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.98)
+            ] as CFArray
+            
+            let locations: [CGFloat] = [0.0, 0.35, 0.75, 1.0]
+            
+            guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                            colors: colors, locations: locations) else {
+                return nil
+            }
+            
+            let center = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
+            let startRadius: CGFloat = 0.0
+            let endRadius: CGFloat = sqrt(pow(size.width / 2.0, 2.0) + pow(size.height / 2.0, 2.0))
+            
+            context.drawRadialGradient(gradient,
+                                       startCenter: center, startRadius: startRadius,
+                                       endCenter: center, endRadius: endRadius,
+                                       options: .drawsAfterEndLocation)
+            
+            guard let cgImage = context.makeImage() else { return nil }
+            return SKTexture(cgImage: cgImage)
+        }
+        
+        private func updateHorizonVisuals(deltaTime: TimeInterval) {
+            // 1. Subtle Luftwaffe planes
+            horizonPlaneTimer += deltaTime
+            if horizonPlaneTimer >= nextPlaneTime {
+                horizonPlaneTimer = 0.0
+                nextPlaneTime = Double.random(in: 2.5...5.5) // much more frequent squadron fly-bys
+                spawnSubtleHorizonPlane()
+            }
+            
+            // 2. Anti-aircraft tracers
+            horizonAATimer += deltaTime
+            if horizonAATimer >= nextAATime {
+                horizonAATimer = 0.0
+                nextAATime = Double.random(in: 0.08...0.20) // extremely intense rate of AA fire
+                triggerAAFire()
+            }
+            
+            // 3. Spawning rising smoke plumes from the background city
+            updateSmokePlumes(deltaTime: deltaTime)
+        }
+        
+        private func spawnSubtleHorizonPlane() {
+            let count = Int.random(in: 2...4) // squadrons of 2-4 planes
+            let formationOffsetDir = Bool.random() ? 1.0 : -1.0
+            
+            for i in 0..<count {
+                let plane = SKNode()
+                plane.zPosition = 0.18
+                
+                // Stagger spawn delay or position
+                let delay = Double(i) * Double.random(in: 0.4...0.8)
+                let darkColor = SKColor(white: CGFloat.random(in: 0.10...0.16), alpha: CGFloat.random(in: 0.40...0.65))
+                
+                let body = SKSpriteNode(color: darkColor, size: CGSize(width: 15, height: 4))
+                body.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                plane.addChild(body)
+                
+                let wing = SKSpriteNode(color: darkColor, size: CGSize(width: 4, height: 11))
+                wing.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                wing.position = CGPoint(x: -2, y: 0)
+                plane.addChild(wing)
+                
+                let startDelayAction = SKAction.wait(forDuration: delay)
+                let startX: CGFloat = -40
+                let startY = horizonY + CGFloat.random(in: 40...160) + (CGFloat(i) * 15.0 * formationOffsetDir)
+                
+                let setupPos = SKAction.run {
+                    plane.position = CGPoint(x: startX, y: startY)
+                }
+                
+                let targetX = size.width + 40
+                let duration = Double.random(in: 11.0...17.0)
+                let move = SKAction.moveTo(x: targetX, duration: duration)
+                let remove = SKAction.removeFromParent()
+                
+                plane.run(SKAction.sequence([
+                    startDelayAction,
+                    setupPos,
+                    move,
+                    remove
+                ]))
+                
+                addChild(plane)
+            }
+        }
+        
+        private func triggerAAFire() {
+            let shotsCount = Int.random(in: 2...5) // burst of 2-5 flak shots
+            
+            for i in 0..<shotsCount {
+                let delay = Double(i) * Double.random(in: 0.05...0.15)
+                
+                let fireAction = SKAction.run { [weak self] in
+                    guard let self = self else { return }
+                    
+                    let centerX = self.size.width / 2
+                    let startX = centerX + CGFloat.random(in: -450...450)
+                    let startY = self.horizonY
+                    
+                    let targetX = startX + CGFloat.random(in: -120...120)
+                    let targetY = self.horizonY + CGFloat.random(in: 120...280)
+                    
+                    let bullet = SKSpriteNode(color: SKColor(red: 1.0, green: 0.85, blue: 0.35, alpha: 0.95), size: CGSize(width: 3, height: 3))
+                    bullet.position = CGPoint(x: startX, y: startY)
+                    bullet.zPosition = 0.19
+                    self.addChild(bullet)
+                    
+                    let duration = Double.random(in: 0.20...0.35)
+                    let move = SKAction.move(to: CGPoint(x: targetX, y: targetY), duration: duration)
+                    
+                    let spawnExplosion = SKAction.run { [weak self] in
+                        guard let self = self else { return }
+                        self.spawnFlakExplosion(at: CGPoint(x: targetX, y: targetY))
+                    }
+                    
+                    let remove = SKAction.removeFromParent()
+                    bullet.run(SKAction.sequence([move, spawnExplosion, remove]))
+                }
+                
+                self.run(SKAction.sequence([
+                    SKAction.wait(forDuration: delay),
+                    fireAction
+                ]))
+            }
+        }
+        
+        private func spawnFlakExplosion(at point: CGPoint) {
+            let flakColor = SKColor(white: CGFloat.random(in: 0.14...0.22), alpha: CGFloat.random(in: 0.65...0.85))
+            let flak = SKSpriteNode(color: flakColor, size: CGSize(width: 5, height: 5))
+            flak.position = point
+            flak.zPosition = 0.19
+            addChild(flak)
+            
+            let expand = SKAction.scale(to: CGFloat.random(in: 2.2...3.5), duration: 0.35)
+            let fade = SKAction.fadeOut(withDuration: 0.35)
+            let group = SKAction.group([expand, fade])
             let remove = SKAction.removeFromParent()
             
-            puff.run(SKAction.sequence([
-                SKAction.group([moveUp, scaleUp, fadeOut]),
-                remove
-            ]))
+            flak.run(SKAction.sequence([group, remove]))
+        }
+        
+        private func updateWartimeSky(isWartime: Bool) {
+            if isWartime {
+                if childNode(withName: "wartimeHorizonGlow") == nil {
+                    // Warm copper glow at the horizon
+                    let glow = SKSpriteNode(color: SKColor(red: 0.85, green: 0.35, blue: 0.15, alpha: 0.45),
+                                            size: CGSize(width: size.width * 2, height: 45))
+                    glow.name = "wartimeHorizonGlow"
+                    glow.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                    glow.position = CGPoint(x: size.width / 2, y: horizonY)
+                    glow.zPosition = 0.02
+                    addChild(glow)
+                }
+                
+                if childNode(withName: "wartimeClouds") == nil {
+                    let clouds = SKNode()
+                    clouds.name = "wartimeClouds"
+                    addChild(clouds)
+                    
+                    let cloudColors = [
+                        SKColor(red: 0.20, green: 0.19, blue: 0.18, alpha: 0.5),
+                        SKColor(red: 0.35, green: 0.33, blue: 0.31, alpha: 0.3),
+                        SKColor(red: 0.24, green: 0.23, blue: 0.22, alpha: 0.4)
+                    ]
+                    
+                    let cloudHeights: [CGFloat] = [12, 18, 15]
+                    let cloudYOffsets: [CGFloat] = [15, 60, 110]
+                    
+                    for i in 0..<3 {
+                        let strip = SKSpriteNode(color: cloudColors[i], size: CGSize(width: size.width * 2.5, height: cloudHeights[i]))
+                        strip.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                        strip.position = CGPoint(x: size.width / 2, y: horizonY + cloudYOffsets[i])
+                        strip.zPosition = 0.01
+                        clouds.addChild(strip)
+                    }
+                }
+            } else {
+                childNode(withName: "wartimeHorizonGlow")?.removeFromParent()
+                childNode(withName: "wartimeClouds")?.removeFromParent()
+            }
+        }
+        
+        private func updateSmokePlumes(deltaTime: TimeInterval) {
+            smokeSpawnTimer += deltaTime
+            if smokeSpawnTimer >= 0.18 {
+                smokeSpawnTimer = 0.0
+                
+                let sources: [CGFloat] = [
+                    size.width * 0.2,
+                    size.width * 0.32,
+                    size.width * 0.48,
+                    size.width * 0.65,
+                    size.width * 0.82
+                ]
+                let startX = sources.randomElement()!
+                
+                let sizeVal = CGFloat.random(in: 4...8)
+                let puff = SKSpriteNode(color: SKColor(red: 0.18, green: 0.17, blue: 0.16, alpha: 0.6), size: CGSize(width: sizeVal, height: sizeVal))
+                puff.position = CGPoint(x: startX, y: horizonY + CGFloat.random(in: 0...5))
+                puff.zPosition = 0.12
+                addChild(puff)
+                
+                let duration = Double.random(in: 5.5...9.0)
+                let moveUp = SKAction.moveBy(x: -CGFloat.random(in: 35...80), y: CGFloat.random(in: 80...160), duration: duration)
+                let scaleUp = SKAction.scale(to: CGFloat.random(in: 3.5...6.0), duration: duration)
+                let fadeOut = SKAction.fadeOut(withDuration: duration)
+                let remove = SKAction.removeFromParent()
+                
+                puff.run(SKAction.sequence([
+                    SKAction.group([moveUp, scaleUp, fadeOut]),
+                    remove
+                ]))
+            }
         }
     }
-}
-
-// MARK: - Deterministic RNG (seeded, for reproducible skylines)
-
-struct SeededRNG {
-    private var state: UInt64
     
-    init(seed: UInt64) {
-        state = seed
-    }
+    // MARK: - Deterministic RNG (seeded, for reproducible skylines)
     
-    mutating func next() -> UInt64 {
-        // xorshift64 — fast, simple, reproducible
-        state ^= state << 13
-        state ^= state >> 7
-        state ^= state << 17
-        return state
+    struct SeededRNG {
+        private var state: UInt64
+        
+        init(seed: UInt64) {
+            state = seed
+        }
+        
+        mutating func next() -> UInt64 {
+            // xorshift64 — fast, simple, reproducible
+            state ^= state << 13
+            state ^= state >> 7
+            state ^= state << 17
+            return state
+        }
+        
+        /// Returns a value in [0, 1)
+        mutating func nextFloat() -> CGFloat {
+            return CGFloat(next() & 0xFFFF) / CGFloat(0xFFFF)
+        }
     }
-    
-    /// Returns a value in [0, 1)
-    mutating func nextFloat() -> CGFloat {
-        return CGFloat(next() & 0xFFFF) / CGFloat(0xFFFF)
-    }
-}

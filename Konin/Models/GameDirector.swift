@@ -17,6 +17,15 @@ final class GameDirector {
     var coalPercentage: Double = 100.0
     var distanceTravelled: Double = 0.0
     var hudOpacity: Double = 1.0
+    var isPaused: Bool = false {
+        didSet {
+            if isPaused {
+                activeScene?.pauseGame()
+            } else {
+                activeScene?.resumeGame()
+            }
+        }
+    }
     
     let audio = SynthAudioEngine.shared
     
@@ -30,6 +39,7 @@ final class GameDirector {
     
     func changeState(to newState: GameState) {
         currentState = newState
+        isPaused = false
         
         if newState != .menu {
             audio.stopMenuMusic(duration: 1.5)

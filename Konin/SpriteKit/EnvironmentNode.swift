@@ -21,6 +21,11 @@ final class EnvironmentNode: SKNode {
         case haystack
         case boulder
         case floweringBush
+        case deadBranch
+        case treeEbi1
+        case treeEbi2
+        case treeEbi3
+        case treeEbi4
     }
 
     private enum Layer {
@@ -188,21 +193,24 @@ final class EnvironmentNode: SKNode {
             // Agricultural / Rural pool
             let pool: [ObjectType] = [
                 .deciduousTreeDark, .deciduousTreeOlive, .pineTree,
-                .bush, .telegraphPole, .farmhouse, .haystack
+                .bush, .telegraphPole, .farmhouse, .haystack,
+                .treeEbi1, .treeEbi2, .treeEbi3, .treeEbi4
             ]
             return pool.randomElement()!
         case .kozmin:
             // Barren / Stormy / Rocky pool
             let pool: [ObjectType] = [
                 .deciduousTreeDark, .pineTree, .bush,
-                .telegraphPole, .farmhouse, .boulder
+                .telegraphPole, .farmhouse, .boulder,
+                .deadBranch, .treeEbi1, .treeEbi2
             ]
             return pool.randomElement()!
         case .jarocin:
             // Warzone pool
             let pool: [ObjectType] = [
                 .deciduousTreeDark, .deciduousTreeOlive, .pineTree,
-                .bush, .telegraphPole, .farmhouse, .wreckedTank
+                .bush, .telegraphPole, .farmhouse, .wreckedTank,
+                .deadBranch, .treeEbi1, .treeEbi2, .treeEbi3, .treeEbi4
             ]
             if Float.random(in: 0...1) < 0.20 {
                 return .wreckedTank
@@ -213,7 +221,7 @@ final class EnvironmentNode: SKNode {
             let pool: [ObjectType] = [
                 .deciduousTreeDark, .deciduousTreeOlive, .pineTree,
                 .bush, .telegraphPole, .farmhouse,
-                .floweringBush
+                .floweringBush, .treeEbi1, .treeEbi2, .treeEbi3, .treeEbi4
             ]
             return pool.randomElement()!
         default:
@@ -224,7 +232,7 @@ final class EnvironmentNode: SKNode {
     // MARK: - Object Building (SKSpriteNode only)
 
     private func populateContainer(_ container: SKNode, type: ObjectType, chapter: Chapter) {
-        let isWartime = (chapter == .jarocin)
+        let isWartime = (chapter == .jarocin || chapter == .kozmin)
 
         switch type {
         case .deciduousTreeDark:
@@ -247,7 +255,34 @@ final class EnvironmentNode: SKNode {
             buildBoulder(in: container)
         case .floweringBush:
             buildFloweringBush(in: container)
+        case .deadBranch:
+            buildEnvironmentItem(in: container, imageName: "dead-branch", size: CGSize(width: 64, height: 64), isWartime: isWartime)
+        case .treeEbi1:
+            buildEnvironmentItem(in: container, imageName: "tree-1", size: CGSize(width: 128, height: 128), isWartime: isWartime)
+        case .treeEbi2:
+            buildEnvironmentItem(in: container, imageName: "tree-2", size: CGSize(width: 128, height: 128), isWartime: isWartime)
+        case .treeEbi3:
+            buildEnvironmentItem(in: container, imageName: "tree-3", size: CGSize(width: 128, height: 128), isWartime: isWartime)
+        case .treeEbi4:
+            buildEnvironmentItem(in: container, imageName: "tree-4", size: CGSize(width: 128, height: 128), isWartime: isWartime)
         }
+    }
+
+    private func buildEnvironmentItem(in container: SKNode, imageName: String, size: CGSize, isWartime: Bool) {
+        let tex = SKTexture(imageNamed: imageName)
+        tex.filteringMode = .nearest
+        
+        let sprite = SKSpriteNode(texture: tex, size: size)
+        sprite.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        sprite.position = .zero
+        
+        if isWartime {
+            // Tint tree to look burnt/dark in war/barren chapters
+            sprite.color = SKColor(red: 0.15, green: 0.14, blue: 0.13, alpha: 1.0)
+            sprite.colorBlendFactor = 0.85
+        }
+        
+        container.addChild(sprite)
     }
 
     // MARK: Deciduous Tree

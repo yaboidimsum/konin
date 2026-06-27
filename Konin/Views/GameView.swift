@@ -152,6 +152,96 @@ struct GameView: View {
                 .ignoresSafeArea()
                 .transition(.opacity)
             }
+            
+            // 4. PAUSE OVERLAY
+            if director.isPaused {
+                ZStack {
+                    // Dark blurred/semi-transparent backdrop
+                    Color.black.opacity(0.7)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 24) {
+                        Text("GAME PAUSED")
+                            .font(.custom("VCR OSD Mono", size: 36))
+                            .foregroundColor(.red)
+                            .tracking(36 * -0.06)
+                            .shadow(color: Color.red.opacity(0.3), radius: 8, x: 0, y: 0)
+                        
+                        Text(chapter.title.uppercased())
+                            .font(.custom("VCR OSD Mono", size: 16))
+                            .foregroundColor(.gray)
+                            .tracking(16 * -0.06)
+                            .padding(.bottom, 20)
+                        
+                        // Continue Button
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                director.isPaused = false
+                            }
+                        }) {
+                            Text("CONTINUE")
+                                .font(.custom("VCR OSD Mono", size: 20))
+                                .tracking(20 * -0.06)
+                                .foregroundColor(.white)
+                                .frame(width: 280, height: 52)
+                                .background(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [
+                                            Color(red: 45/255, green: 45/255, blue: 45/255),
+                                            Color(red: 20/255, green: 20/255, blue: 20/255)
+                                        ]),
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                .overlay(
+                                    Rectangle()
+                                        .stroke(Color.white.opacity(0.8), lineWidth: 3)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        
+                        // Exit Button
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.8)) {
+                                director.changeState(to: .menu)
+                            }
+                        }) {
+                            Text("EXIT TO MENU")
+                                .font(.custom("VCR OSD Mono", size: 20))
+                                .tracking(20 * -0.06)
+                                .foregroundColor(.white)
+                                .frame(width: 280, height: 52)
+                                .background(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [
+                                            Color(red: 100/255, green: 30/255, blue: 30/255),
+                                            Color(red: 35/255, green: 10/255, blue: 10/255)
+                                        ]),
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                .overlay(
+                                    Rectangle()
+                                        .stroke(Color.red.opacity(0.6), lineWidth: 3)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(40)
+                    .background(
+                        Color.black.opacity(0.9)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(Color.white.opacity(0.15), lineWidth: 4)
+                            )
+                    )
+                    .frame(width: 420, height: 380)
+                }
+                .transition(.opacity)
+                .zIndex(10)
+            }
         }
         .onAppear {
             triggerTitleCard()
@@ -175,7 +265,7 @@ struct GameView: View {
             if dist >= 160.0 && dist <= 250.0 {
                 return "John: \"The furnace is hungry. Keep stoking coal (Space) to maintain speed.\""
             } else if dist >= 260.0 && dist <= 300.0 {
-                return "John: \"Krotoszyn is fading behind us. We are heading east into the unknown.\""
+                return "John: \"Krotoszyn is fading behind us. We are heading south into the unknown.\""
             }
         case .kozmin:
             if dist >= 40.0 && dist <= 130.0 {

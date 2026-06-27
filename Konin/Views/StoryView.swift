@@ -32,8 +32,8 @@ struct StoryView: View {
                 // 2. RADIAL GRADIENT OVERLAY
                 RadialGradient(
                     gradient: Gradient(colors: [
-                        Color(red: 0.2, green: 0.17, blue: 0.17, opacity: 0.0),
-                        Color(red: 0.0, green: 0.04, blue: 0.03, opacity: 1.0)
+                        Color.black.opacity(0.0),
+                        Color.black
                     ]),
                     center: UnitPoint(x: 0.46, y: 0.50),
                     startRadius: 0,
