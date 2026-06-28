@@ -37,39 +37,42 @@ enum Chapter: String, CaseIterable, Codable, Equatable {
             ]
         case .krotoszyn:
             return [
-                (0.0, 6.0, "SM Krotoszyn: \"Welcome, Conductor! Thank heavens you made it. We just received word that the origin station has been completely bombed behind you.\""),
-                (6.0, 12.0, "MC: \"Dear God... the destruction happened right as we pulled away. What are our orders now?\""),
-                (12.0, 18.0, "SM Krotoszyn: \"I am taking over your journey from here to guide you safely until you reach Koźmin Station. Keep your steam steady and follow my signals!\"")
+                (0.0, 100.0, "SM Krotoszyn: \"Welcome, Conductor! I'm the station master of Kozmin. Thank heavens you made it. We just received word that the Krotoszyn station has been completely bombed behind you.\""),
+                (120.0, 180.0, "MC: \"Dear God... the destruction happened right as we pulled away. What are our orders now?\""),
+                (200.0, 280.0, "SM Krotoszyn: \"I am taking over your journey from here to guide you safely until you reach Koźmin Station. Keep your steam steady and follow my signals!\"")
             ]
         case .kozmin:
             return [
-                (0.0, 5.0, "SM Koźmin: \"All clear for departure from Koźmin, Driver. Your train is refueled and ready to head out toward Jarocin.\""),
-                (5.0, 10.0, "MC: \"Understood, Station Master. Thank you for the coal. I will maintain maximum speed.\""),
-                (10.0, 16.0, "SM Koźmin: \"Safe travels, my friend. Once you get closer, an officer from Jarocin Station will patch into your radio and guide you through their territory.\"")
+                (0.0, 20.0, "SM Koźmin: \"All clear for departure from Koźmin, Driver. Your train is refueled and ready to head out toward Jarocin.\""),
+                (20.0, 100.0, "MC: \"Understood, Station Master. Thank you for the coal. I will maintain maximum speed.\""),
+                (130.0, 180.0, "SM Koźmin: \"Safe travels, my friend. Once you get closer, an officer from Jarocin Station will patch into your radio and guide you through their territory.\"")
             ]
         case .jarocin:
             return [
-                (0.0, 6.0, "SM Jarocin (Radio): \"Train from the North, welcome to Jarocin airspace. Do not stop at the Jarocin platform! Repeat, do not stop!\""),
-                (6.0, 11.0, "MC: \"Station Master? My passengers need a secure perimeter, we were told this was a clearance point!\""),
-                (11.0, 17.0, "SM Jarocin (Radio): \"The situation here is completely unstable! Enemy bombers are already circling directly above the clouds. Push through the station immediately!\"")
+                (10.0, 80.0, "SM Jarocin (Radio): \"Train from the North, welcome to Jarocin airspace. Do not stop at the Jarocin platform! Repeat, do not stop!\""),
+                (120.0, 200.0, "MC: \"Station Master? My passengers need a secure perimeter, we were told this was a clearance point!\""),
+                (250.0, 400.0, "SM Jarocin (Radio): \"The situation here is completely unstable! Enemy bombers are already circling directly above the clouds. Push through the station immediately!\"")
             ]
         case .tunnel:
-            return [] // Limbo tunnel scene. Silence and heartbeat mechanics only.
+            return [
+                (10.0, 80.0, "MCL \"Jarocin is far behind us now... or whatever is left of it. The frantic speed of our escape is suddenly swallowed by this darkness.\""),
+                (80.0, 140.0, "MCL \"Jarocin is far behind us now... or whatever is left of it. The frantic speed of our escape is suddenly swallowed by this darkness.\""),
+            ]
         case .konin:
             return [
-                (0.0, 5.0, "SM Konin (Radio): \"Train from the North, you are moving incredibly fast. Konin has prepared a peaceful resting place for all of you... Why don't you stop?\""),
-                (5.0, 10.0, "MC: \"Forgive me, Station Master! I cannot stop in Konin! The carriages are full of terrified passengers from the Jarocin bombing. I must bring them to Żółkiew as quickly as possible!\""),
-                (10.0, 15.0, "SM Konin (Radio): \"The bombing in Jarocin... Ah. So you haven't even realized that you are in the exact same carriage as them, Driver? Very well... keep moving until the rails run out.\""),
-                (15.0, 20.0, "MC: \"What...? What do you mean by that, Sir? Hello? Station Master?!\"")
+                (100.0, 180.0, "SM Konin (Radio): \"Train from the North, you are moving incredibly fast. Konin has prepared a peaceful resting place for all of you... Why don't you stop?\""),
+                (200.0, 350.0, "MC: \"Forgive me, Station Master! I cannot stop in Konin! The carriages are full of terrified passengers from the Jarocin bombing. I must bring them to Żółkiew as quickly as possible!\""),
+                (370.0, 440.0, "SM Konin (Radio): \"The bombing in Jarocin... Ah. Okay Driver! Very well... keep moving until the rails run out.\""),
+                (460.0, 500.0, "MC: \"What...? What do you mean by that, Sir? Hello? Station Master?!\"")
             ]
         case .zolkiew:
             return [
                 (0.0, 5.0, "MC: \"Sir... We have finally reached the final destination. Please help my passengers in the back, they must be exhausted...\""),
                 (5.0, 10.0, "SM Żółkiew: \"There are no exhausted passengers here, young man. Your train is entirely empty.\""),
                 (10.0, 15.0, "MC: \"Empty? That's impossible! I locked the carriage doors myself! I... I can still hear the echoes of their voices!\""),
-                (15.0, 20.0, "SM Żółkiew: \"Take a look at your cabin window. Look at your own reflection.\""),
-                (20.0, 25.0, "MC: \"Wait... My chest... is torn open? Since when has my uniform been drenched in blood...? Why didn't I feel any of this until now...?\""),
-                (25.0, 30.0, "SM Żółkiew: \"Because your soul refused to die in Jarocin, Driver. The bomb claimed your life and your passengers' lives in an instant. Yet, your determination was so fierce, your spirit kept driving this train right through the boundary of death.\""),
+                (15.0, 20.0, "SM Żółkiew: \"Look closely at your hands on the controls, Driver. You are not breathing. You haven't taken a single breath since you crossed that tunnel.\""),
+                (20.0, 25.0, "MC: \"I... I am not breathing...? Wait... I can't feel the warmth of the cabin... I can't feel my own heartbeat... Why didn't I notice until now...?\""),
+                (25.0, 30.0, "SM Żółkiew: \"Because your soul refused to die in Jarocin. The bomb claimed your life and your passengers' lives in an instant. Yet, your determination was so fierce, your spirit kept driving this train right through the boundary of death.\""),
                 (30.0, 35.0, "MC: \"So... I am also... dead along with them... ever since Jarocin...?\""),
                 (35.0, 40.0, "SM Żółkiew: \"Yes. But you did not fail. You brought them all safely to a place of peace. Your duty is honorably fulfilled, Driver. Now, shut down the engine and rest among them.\"")
             ]

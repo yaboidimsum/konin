@@ -2,58 +2,92 @@
 //  CutsceneView.swift
 //  Konin
 //
-//  Placeholder cutscene viewer — displays a sequence of scene cards
-//  (image + caption) with tap-to-advance. Replace placeholder assets
-//  with real pixel art once available.
-//
-//  To add a cutscene for another chapter, add its scenes to
-//  `CutsceneScene.scenes(for:)` below.
-//
 
 import SwiftUI
 
-// MARK: - Data
-
 struct CutsceneScene: Identifiable {
     let id: Int
-    let imageName: String   // Asset catalog name — swap in real art here
-    let caption: String     // Displayed at the bottom of the scene card
+    let imageName: String
+    let caption: String
 
-    /// All scenes for a given chapter's cutscene.
-    /// Currently only .prolog is defined.
     static func scenes(for chapter: Chapter) -> [CutsceneScene] {
         switch chapter {
+
         case .prolog:
             return [
                 CutsceneScene(
                     id: 0,
-                    imageName: "cutscene_prolog_01",   // desk radio, fighter silhouettes outside
+                    imageName: "cutscene_prolog_01",
                     caption: "September 1st, 1939. A desk radio fills the crew room with news of the German advance.\nOutside, fighter silhouettes darken the western sky."
                 ),
                 CutsceneScene(
                     id: 1,
-                    imageName: "cutscene_prolog_02",   // station master bursts in, sirens
+                    imageName: "cutscene_prolog_02",
                     caption: "The Station Master bursts through the door, breathless.\nIn the distance, air-raid sirens begin to wail."
                 ),
                 CutsceneScene(
                     id: 2,
-                    imageName: "cutscene_prolog_03",   // SM shouting, chaos
+                    imageName: "cutscene_prolog_03",
                     caption: "\"Evacuate NOW! Load everyone you can!\nWe must leave before the lines are cut!\""
                 ),
                 CutsceneScene(
                     id: 3,
-                    imageName: "cutscene_prolog_04",   // John running to locomotive, steam, chaos
+                    imageName: "cutscene_prolog_04",
                     caption: "John sprints to the locomotive. The engine roars to life.\nTerrified passengers scramble to board the carriages."
                 ),
                 CutsceneScene(
                     id: 4,
-                    imageName: "cutscene_prolog_05",   // brakeman signal, John nods, throttle
+                    imageName: "cutscene_prolog_05",
                     caption: "\"All ready, sir! Keep this train and everyone inside safe!\"\nJohn nods. He pulls the throttle."
                 ),
                 CutsceneScene(
                     id: 5,
-                    imageName: "cutscene_prolog_06",   // train leaving, station explodes behind
+                    imageName: "cutscene_prolog_06",
                     caption: "The train accelerates out of the station.\nBehind them, a massive explosion obliterates everything they knew."
+                )
+            ]
+
+        case .zolkiew:
+            return [
+                CutsceneScene(
+                    id: 0,
+                    imageName: "cutscene_zolkiew_01",
+                    caption: "MC: \"Sir... We have finally reached the final destination. Please help my passengers in the back, they must be exhausted...\""
+                ),
+                CutsceneScene(
+                    id: 1,
+                    imageName: "cutscene_zolkiew_01",
+                    caption: "SM Żółkiew: \"There are no exhausted passengers here, young man. Your train is entirely empty.\""
+                ),
+                CutsceneScene(
+                    id: 2,
+                    imageName: "cutscene_zolkiew_02",
+                    caption: "MC: \"Empty? That's impossible! I locked the carriage doors myself! I... I can still hear the echoes of their voices!\""
+                ),
+                CutsceneScene(
+                    id: 3,
+                    imageName: "cutscene_zolkiew_02",
+                    caption: "SM Żółkiew: \"Look closely at your hands on the controls, Driver. You are not breathing. You haven't taken a single breath since you crossed that tunnel.\""
+                ),
+                CutsceneScene(
+                    id: 4,
+                    imageName: "cutscene_zolkiew_03",
+                    caption: "MC: \"I... I am not breathing...? Wait... I can't feel the warmth of the cabin... I can't feel my own heartbeat... Why didn't I notice until now...?\""
+                ),
+                CutsceneScene(
+                    id: 5,
+                    imageName: "cutscene_zolkiew_03",
+                    caption: "SM Żółkiew: \"Because your soul refused to die in Jarocin. The bomb claimed your life and your passengers' lives in an instant. Yet, your determination was so fierce, your spirit kept driving this train right through the boundary of death.\""
+                ),
+                CutsceneScene(
+                    id: 6,
+                    imageName: "cutscene_zolkiew_04",
+                    caption: "MC: \"So... I am also... dead along with them... ever since Jarocin...?\""
+                ),
+                CutsceneScene(
+                    id: 7,
+                    imageName: "cutscene_zolkiew_04",
+                    caption: "SM Żółkiew: \"Yes. But you did not fail. You brought them all safely to a place of peace. Your duty is honorably fulfilled, Driver. Now, shut down the engine and rest among them.\""
                 )
             ]
         default:
@@ -61,8 +95,6 @@ struct CutsceneScene: Identifiable {
         }
     }
 }
-
-// MARK: - View
 
 struct CutsceneView: View {
     let chapter: Chapter
@@ -219,12 +251,19 @@ struct CutsceneView: View {
         withAnimation(.easeIn(duration: 0.8)) {
             sceneOpacity = 1.0
         }
+        
+        // ── Pemicu Audio Zolkiew (Cuma ngecek Zolkiew doang) ─────────────
+        if chapter == .zolkiew {
+            SynthAudioEngine.shared.playZolkiewAudio(sceneIndex: currentIndex)
+        }
+        // ──────────────────────────────────────────────────────────────────
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
             withAnimation(.easeIn(duration: 1.2)) {
                 captionOpacity = 1.0
             }
         }
-        // Show skip button after first scene is visible
+        
         if !showSkip {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 withAnimation { showSkip = true }

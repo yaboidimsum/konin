@@ -24,6 +24,30 @@ final class SynthAudioEngine: @unchecked Sendable {
     private var introJohnPlayer: AVAudioPlayer?     // Introduction-john.mp3 (intro screen background music)
     private var introSection1Player: AVAudioPlayer? // introduction/section-1.mp3 (voiceover section 1)
     private var introSection2Player: AVAudioPlayer? // introduction/section-2.mp3 (voiceover section 2)
+    private var krotoszyn1Player: AVAudioPlayer?       // Annoucher/Kozmin-1.mp3 (Koźmin caption 1 voiceover)
+    private var krotoszyn2Player: AVAudioPlayer?
+    private var krotoszyn3Player: AVAudioPlayer?
+    private var kozmin1Player: AVAudioPlayer?
+    private var kozmin2Player: AVAudioPlayer?
+    private var kozmin3Player: AVAudioPlayer?
+    private var jarocin1Player: AVAudioPlayer?
+    private var jarocin2Player: AVAudioPlayer?
+    private var jarocin3Player: AVAudioPlayer?
+    private var tunnel1Player: AVAudioPlayer?
+    private var tunnel2Player: AVAudioPlayer?
+    private var konin1Player: AVAudioPlayer?
+    private var konin2Player: AVAudioPlayer?
+    private var konin3Player: AVAudioPlayer?
+    private var konin4Player: AVAudioPlayer?
+    private var zolkiew1Player: AVAudioPlayer?
+    private var zolkiew2Player: AVAudioPlayer?
+    private var zolkiew3Player: AVAudioPlayer?
+    private var zolkiew4Player: AVAudioPlayer?
+    private var zolkiew5Player: AVAudioPlayer?
+    private var zolkiew6Player: AVAudioPlayer?
+    private var zolkiew7Player: AVAudioPlayer?
+    private var zolkiew8Player: AVAudioPlayer?
+    
     
     // MARK: - State
     private var isAmbienceActive: Bool = false
@@ -83,6 +107,29 @@ final class SynthAudioEngine: @unchecked Sendable {
         loadPlayer(resource: "Introduction-john", store: &introJohnPlayer, initialVolume: 0.0)
         loadIntroSectionPlayer(resource: "section-1", store: &introSection1Player)
         loadIntroSectionPlayer(resource: "section-2", store: &introSection2Player)
+        loadAnnoucherPlayer(resource: "Krotoszyn-1", store: &krotoszyn1Player)
+        loadAnnoucherPlayer(resource: "Krotoszyn-2", store: &krotoszyn2Player)
+        loadAnnoucherPlayer(resource: "Krotoszyn-3", store: &krotoszyn3Player)
+        loadAnnoucherPlayer(resource: "Kozmin-1", store: &kozmin1Player)
+        loadAnnoucherPlayer(resource: "Kozmin-2", store: &kozmin2Player)
+        loadAnnoucherPlayer(resource: "Kozmin-3", store: &kozmin3Player)
+        loadAnnoucherPlayer(resource: "Jarocin-1", store: &jarocin1Player)
+        loadAnnoucherPlayer(resource: "Jarocin-2", store: &jarocin2Player)
+        loadAnnoucherPlayer(resource: "Jarocin-3", store: &jarocin3Player)
+        loadAnnoucherPlayer(resource: "Tunnel-1", store: &tunnel1Player)
+        loadAnnoucherPlayer(resource: "Tunnel-2", store: &tunnel2Player)
+        loadAnnoucherPlayer(resource: "Konin-1", store: &konin1Player)
+        loadAnnoucherPlayer(resource: "Konin-2", store: &konin2Player)
+        loadAnnoucherPlayer(resource: "Konin-3", store: &konin3Player)
+        loadAnnoucherPlayer(resource: "Konin-4", store: &konin4Player)
+        loadAnnoucherPlayer(resource: "Zolkiew-1", store: &zolkiew1Player)
+        loadAnnoucherPlayer(resource: "Zolkiew-2", store: &zolkiew2Player)
+        loadAnnoucherPlayer(resource: "Zolkiew-3", store: &zolkiew3Player)
+        loadAnnoucherPlayer(resource: "Zolkiew-4", store: &zolkiew4Player)
+        loadAnnoucherPlayer(resource: "Zolkiew-5", store: &zolkiew5Player)
+        loadAnnoucherPlayer(resource: "Zolkiew-6", store: &zolkiew6Player)
+        loadAnnoucherPlayer(resource: "Zolkiew-7", store: &zolkiew7Player)
+        loadAnnoucherPlayer(resource: "Zolkiew-8", store: &zolkiew8Player)
     }
     
     // MARK: - Audio Session Configuration
@@ -111,6 +158,44 @@ final class SynthAudioEngine: @unchecked Sendable {
             let player = try AVAudioPlayer(contentsOf: url)
             player.numberOfLoops = -1
             player.volume = initialVolume
+            player.prepareToPlay()
+            store = player
+            print("[Audio] Loaded \(resource).mp3 successfully")
+        } catch {
+            print("[Audio] Failed to load \(resource).mp3: \(error)")
+        }
+    }
+    
+    private func loadAnnoucherPlayer(resource: String, store: inout AVAudioPlayer?) {
+        let url: URL? = Bundle.main.url(forResource: resource, withExtension: "mp3")
+            ?? Bundle.main.url(forResource: resource, withExtension: "mp3", subdirectory: "Annoucher")
+            ?? Bundle.main.url(forResource: resource, withExtension: "mp3", subdirectory: "Audio/Annoucher")
+        
+        guard let resolvedURL = url else {
+            print("[Audio] \(resource).mp3 not found in Annoucher folder")
+            return
+        }
+        do {
+            let player = try AVAudioPlayer(contentsOf: resolvedURL)
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.prepareToPlay()
+            store = player
+            print("[Audio] Loaded Annoucher/\(resource).mp3 successfully")
+        } catch {
+            print("[Audio] Failed to load \(resource).mp3: \(error)")
+        }
+    }
+    
+    private func loadIntroSectionPlayer(resource: String, store: inout AVAudioPlayer?) {
+        guard let url = findAudioURL(forResource: resource, withExtension: "mp3") else {
+            print("[Audio] \(resource).mp3 not found in bundle")
+            return
+        }
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.numberOfLoops = 0
+            player.volume = 1.0
             player.prepareToPlay()
             store = player
             print("[Audio] Loaded \(resource).mp3 successfully")
@@ -173,6 +258,52 @@ final class SynthAudioEngine: @unchecked Sendable {
             self.introSection1Player?.volume = 0.0
             self.introSection2Player?.stop()
             self.introSection2Player?.volume = 0.0
+            self.krotoszyn1Player?.stop()
+            self.krotoszyn1Player?.volume = 0.0
+            self.krotoszyn2Player?.stop()
+            self.krotoszyn2Player?.volume = 0.0
+            self.krotoszyn3Player?.stop()
+            self.krotoszyn3Player?.volume = 0.0
+            self.kozmin1Player?.stop()
+            self.kozmin1Player?.volume = 0.0
+            self.kozmin2Player?.stop()
+            self.kozmin2Player?.volume = 0.0
+            self.kozmin3Player?.stop()
+            self.kozmin3Player?.volume = 0.0
+            self.jarocin1Player?.stop()
+            self.jarocin1Player?.volume = 0.0
+            self.jarocin2Player?.stop()
+            self.jarocin2Player?.volume = 0.0
+            self.jarocin3Player?.stop()
+            self.jarocin3Player?.volume = 0.0
+            self.tunnel1Player?.stop()
+            self.tunnel1Player?.volume = 0.0
+            self.tunnel2Player?.stop()
+            self.tunnel2Player?.volume = 0.0
+            self.konin1Player?.stop()
+            self.konin1Player?.volume = 0.0
+            self.konin2Player?.stop()
+            self.konin2Player?.volume = 0.0
+            self.konin3Player?.stop()
+            self.konin3Player?.volume = 0.0
+            self.konin4Player?.stop()
+            self.konin4Player?.volume = 0.0
+            self.zolkiew1Player?.stop()
+            self.zolkiew1Player?.volume = 0.0
+            self.zolkiew2Player?.stop()
+            self.zolkiew2Player?.volume = 0.0
+            self.zolkiew3Player?.stop()
+            self.zolkiew3Player?.volume = 0.0
+            self.zolkiew4Player?.stop()
+            self.zolkiew4Player?.volume = 0.0
+            self.zolkiew5Player?.stop()
+            self.zolkiew5Player?.volume = 0.0
+            self.zolkiew6Player?.stop()
+            self.zolkiew6Player?.volume = 0.0
+            self.zolkiew7Player?.stop()
+            self.zolkiew7Player?.volume = 0.0
+            self.zolkiew8Player?.stop()
+            self.zolkiew8Player?.volume = 0.0
         }
     }
     
@@ -267,6 +398,281 @@ final class SynthAudioEngine: @unchecked Sendable {
             self.introSection2Player?.stop()
         }
     }
+    
+    // Rename method:
+    func playKrotoszyn1Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let player = self.krotoszyn1Player else { return }
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playKrotoszyn2Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let player = self.krotoszyn2Player else { return }
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playKrotoszyn3Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let player = self.krotoszyn3Player else { return }
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playKozmin1Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.kozmin1Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playKozmin2Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.kozmin2Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    
+    func playKozmin3Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.kozmin3Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playJarocin1Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.jarocin1Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playJarocin2Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.jarocin2Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playJarocin3Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.jarocin3Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playTunnel1Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.tunnel1Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playTunnel2Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.tunnel2Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    
+    func playKonin1Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.konin1Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playKonin2Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.konin2Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playKonin3Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.konin3Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+
+    func playKonin4Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.konin4Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+
+    func playZolkiew1Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.zolkiew1Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playZolkiew2Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.zolkiew2Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playZolkiew3Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.zolkiew3Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playZolkiew4Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.zolkiew4Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playZolkiew5Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.zolkiew5Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    
+    func playZolkiew6Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.zolkiew6Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playZolkiew7Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.zolkiew7Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+    
+    func playZolkiew8Announcement() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let player = self.zolkiew8Player else { return }
+
+            player.currentTime = 0
+            player.numberOfLoops = 0
+            player.volume = 1.0
+            player.play()
+        }
+    }
+
     
     func setChapter(_ chapter: Chapter) {
         DispatchQueue.main.async { [weak self] in
@@ -467,6 +873,58 @@ final class SynthAudioEngine: @unchecked Sendable {
         return level3Player?.currentTime ?? 0.0
     }
     
+    // MARK: - Cutscene Audio Player Logic (Zolkiew Only)
+
+    func playZolkiewAudio(sceneIndex: Int) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            // Hentikan audio scene sebelumnya
+            self.stopCutsceneAudio()
+            
+            let player: AVAudioPlayer?
+            switch sceneIndex {
+            case 0: player = self.zolkiew1Player
+            case 1: player = self.zolkiew2Player
+            case 2: player = self.zolkiew3Player
+            case 3: player = self.zolkiew4Player
+            case 4: player = self.zolkiew5Player
+            case 5: player = self.zolkiew6Player
+            case 6: player = self.zolkiew7Player
+            case 7: player = self.zolkiew8Player
+            default: player = nil
+            }
+            
+            guard let p = player else { return }
+            p.currentTime = 0
+            p.numberOfLoops = 0
+            p.volume = 1.0
+            p.play()
+        }
+    }
+
+    func stopCutsceneAudio() {
+        if Thread.isMainThread {
+            self.performStopCutsceneAudio()
+        } else {
+            DispatchQueue.main.sync {
+                self.performStopCutsceneAudio()
+            }
+        }
+    }
+
+    private func performStopCutsceneAudio() {
+        // Cuma stop player Zolkiew
+        zolkiew1Player?.stop()
+        zolkiew2Player?.stop()
+        zolkiew3Player?.stop()
+        zolkiew4Player?.stop()
+        zolkiew5Player?.stop()
+        zolkiew6Player?.stop()
+        zolkiew7Player?.stop()
+        zolkiew8Player?.stop()
+    }
+    
     // MARK: - Private Playback
     
     private static func isPeacefulChapter(_ chapter: Chapter) -> Bool {
@@ -642,23 +1100,6 @@ final class SynthAudioEngine: @unchecked Sendable {
         fade.completion = completion
     }
     
-    private func loadIntroSectionPlayer(resource: String, store: inout AVAudioPlayer?) {
-        guard let url = findAudioURL(forResource: resource, withExtension: "mp3") else {
-            print("[Audio] \(resource).mp3 not found in bundle")
-            return
-        }
-        do {
-            let player = try AVAudioPlayer(contentsOf: url)
-            player.numberOfLoops = 0
-            player.volume = 1.0
-            player.prepareToPlay()
-            store = player
-            print("[Audio] Loaded \(resource).mp3 successfully")
-        } catch {
-            print("[Audio] Failed to load \(resource).mp3: \(error)")
-        }
-    }
-    
     private func findAudioURL(forResource name: String, withExtension ext: String) -> URL? {
         if let url = Bundle.main.url(forResource: name, withExtension: ext) {
             return url
@@ -675,3 +1116,5 @@ final class SynthAudioEngine: @unchecked Sendable {
         return nil
     }
 }
+
+
