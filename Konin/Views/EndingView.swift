@@ -158,12 +158,12 @@ struct EndingView: View {
                                     .foregroundColor(Color(white: 0.3))
                                     .tracking(18 * -0.06)
                                 
-                                Text("Created by Dimas Prihady Setyawan")
+                                Text("Created by Awan, Evelyn, and Ridwan")
                                     .font(.custom("VCR OSD Mono", size: 20))
                                     .foregroundColor(.black)
                                     .tracking(20 * -0.06)
                                 
-                                Text("Developed with Swift, SwiftUI, and SpriteKit")
+                                Text("Developed with SwiftUI and SpriteKit")
                                     .font(.custom("VCR OSD Mono", size: 16))
                                     .foregroundColor(Color(white: 0.4))
                                     .tracking(16 * -0.06)

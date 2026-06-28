@@ -681,7 +681,7 @@ final class GameScene: SKScene {
         let dashH: CGFloat = 230
         
         // ── 1. COCKPIT TEXTURED BACKGROUND ────────────────────────────────────
-        let cockpitTexture = SKTexture(imageNamed: "train-cockpit")
+        let cockpitTexture = SKTexture(imageNamed: "train-cockpit-2")
         cockpitTexture.filteringMode = .nearest
         let cockpitBg = SKSpriteNode(texture: cockpitTexture, size: size)
         cockpitBg.position = .zero

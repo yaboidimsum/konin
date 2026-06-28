@@ -35,7 +35,7 @@ struct LoadingView: View {
             self.backgroundImage = Image("background-1") // Fallback
         }
         
-        if let url = Bundle.main.url(forResource: "loading-menu-image-1", withExtension: "png"),
+        if let url = Bundle.main.url(forResource: "loading-2", withExtension: "png"),
            let nsImage = NSImage(contentsOf: url) {
             self.slideInImage = Image(nsImage: nsImage)
         } else {
