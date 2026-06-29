@@ -7,16 +7,17 @@ final class EnvironmentNode: SKNode {
     // MARK: - Types
     
     private enum ObjectType: CaseIterable {
-        case tree
-        case tree1
-        case tree2
-        case tree3
-        case things
+        case deciduousTreeDark
+        case deciduousTreeOlive
+        case pineTree
+        case bush
         case telegraphPole
+        case farmhouse
         case wreckedTank
         case haystack
         case boulder
         case floweringBush
+        case cherryBlossomTree
         case deadBranch
         case treeEbi1
         case treeEbi2
@@ -202,7 +203,6 @@ final class EnvironmentNode: SKNode {
             }
             return pool.filter { $0 != .wreckedTank }.randomElement()!
         case .konin:
-            // Dreamy / Peaceful pool
             let pool: [ObjectType] = [
                 .deciduousTreeDark, .deciduousTreeOlive, .pineTree,
                 .bush, .telegraphPole, .farmhouse,
@@ -210,10 +210,10 @@ final class EnvironmentNode: SKNode {
             ]
             return pool.randomElement()!
             
-        case .konin:
+        case .tunnel, .zolkiew:
             let pool: [ObjectType] = [
-                .tree, .tree1, .tree2, .tree3,
-                .floweringBush, .cherryBlossomTree, .things
+                .deciduousTreeDark, .deciduousTreeOlive, .pineTree,
+                .floweringBush, .cherryBlossomTree, .deadBranch
             ]
             return pool.randomElement()!
             
@@ -249,6 +249,8 @@ final class EnvironmentNode: SKNode {
             buildBush(in: container, isWartime: isWartime)
         case .telegraphPole:
             buildTelegraphPole(in: container, chapter: chapter)
+        case .farmhouse:
+            buildFarmhouse(in: container, chapter: chapter)
             
         case .wreckedTank:
             buildWreckedTank(in: container)
@@ -261,6 +263,8 @@ final class EnvironmentNode: SKNode {
             
         case .floweringBush:
             buildFloweringBush(in: container)
+        case .cherryBlossomTree:
+            buildCherryBlossomTree(in: container)
         case .deadBranch:
             buildEnvironmentItem(in: container, imageName: "dead-branch", size: CGSize(width: 64, height: 64), isWartime: isWartime)
         case .treeEbi1:
@@ -380,7 +384,7 @@ final class EnvironmentNode: SKNode {
 
     // MARK: Farmhouse Silhouette
 
-    private func buildFarmhouse(in container: SKNode, isWartime: Bool, chapter: Chapter) {
+    private func buildFarmhouse(in container: SKNode, chapter: Chapter) {
         let isDamaged = (chapter == .jarocin || chapter == .kozmin)
         let imageName = isDamaged ? "farmhouse-damaged" : "farmhouse-polish"
         
@@ -489,5 +493,13 @@ final class EnvironmentNode: SKNode {
     }
 
     // MARK: Cherry Blossom Tree
+
+    private func buildCherryBlossomTree(in container: SKNode) {
+        buildDeciduousTree(in: container, imageName: "tree-birch", isWartime: false)
+        let blossoms = SKSpriteNode(color: SKColor(red: 0.96, green: 0.78, blue: 0.84, alpha: 0.75), size: CGSize(width: 44, height: 18))
+        blossoms.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        blossoms.position = CGPoint(x: 0, y: 54)
+        container.addChild(blossoms)
+    }
 
 }
