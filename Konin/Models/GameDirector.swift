@@ -32,10 +32,12 @@ final class GameDirector {
     /// Weak reference to the active GameScene so we can trigger the cinematic fail fade.
     weak var activeScene: GameScene?
     
-    init() {
+    private init() {
         audio.start()
         audio.startMenuMusic()
     }
+    
+    // MARK: - State Machine
     
     func changeState(to newState: GameState) {
         currentState = newState
@@ -46,6 +48,7 @@ final class GameDirector {
         }
         
         switch newState {
+            
         case .menu:
             audio.stop()
             audio.start()
@@ -53,8 +56,18 @@ final class GameDirector {
             audio.setChapter(.krotoszyn)
             audio.setSpeedRatio(1.0)
             audio.startMenuMusic()
+            
         case .loading:
             break
+            
+        case .cutscene(let chapter):
+            // Cutscenes play before a chapter's story/bridge screen.
+            // Currently only .prolog has a cutscene.
+            activeChapter = chapter
+            audio.setChapter(chapter)
+            audio.startIntroJohn()
+            audio.setSpeedRatio(0.0)
+            
         case .story(let chapter):
             activeChapter = chapter
             audio.setChapter(chapter)
@@ -64,6 +77,7 @@ final class GameDirector {
                 audio.setAmbienceActive(false)
             }
             audio.setSpeedRatio(0.3)
+            
         case .playing(let chapter):
             activeChapter = chapter
             coalPercentage = 100.0
@@ -74,15 +88,18 @@ final class GameDirector {
                 audio.stopIntroJohn(duration: 4.0)
             }
             audio.setAmbienceActive(true)
-            audio.setSpeedRatio(1.0)
+            audio.setSpeedRatio(chapter.isGhostSegment ? 0.6 : 1.0)
+            
         case .failed:
             audio.setSpeedRatio(0.0)
             audio.setSirenActive(false)
             audio.setAmbienceActive(false)
+            
         case .ending:
             audio.setChapter(.zolkiew)
             audio.stopTrainSound()
             audio.setSpeedRatio(0.0)
+            
         case .credits:
             audio.setChapter(.zolkiew)
             audio.stopTrainSound()
@@ -90,31 +107,84 @@ final class GameDirector {
         }
     }
     
+    // MARK: - Navigation Helpers
+    
+    // Full game flow:
+    //
+    //   .menu
+    //     → .loading
+    //     → .cutscene(.prolog)          ← cinematic opening (6 scenes)
+    //     → .story(.krotoszyn)          ← bridge text "the sky turned red..."
+    //     → .playing(.krotoszyn)
+    //     → .story(.kozmin)             ← bridge text "Krotoszyn has crumbled..."
+    //     → .playing(.kozmin)
+    //     → .story(.jarocin)
+    //     → .playing(.jarocin)
+    //     → .story(.tunnel)             ← triggered by explosion, not chapter complete
+    //     → .playing(.tunnel)
+    //     → .story(.konin)
+    //     → .playing(.konin)
+    //     → .story(.zolkiew)
+    //     → .playing(.zolkiew)
+    //     → .ending
+    //     → .credits
+    
+    /// Called by LoadingView once assets are ready.
     func startGame() {
-        changeState(to: .loading)
+        changeState(to: .cutscene(.prolog))
     }
     
-    func advanceFromStory(_ chapter: Chapter) {
-        if chapter == .prolog {
+    /// Called when a cutscene finishes (player taps through all scenes).
+    func advanceFromCutscene(_ chapter: Chapter) {
+        switch chapter {
+            
+        case .prolog:
             changeState(to: .story(.krotoszyn))
-        } else {
-            changeState(to: .playing(chapter))
+            
+        case .zolkiew:
+            changeState(to: .ending)
+            
+        default:
+            changeState(to: .story(chapter))
         }
     }
     
+    /// Called when the player taps "continue" on a StoryView.
+    /// Called when the player taps "continue" on a StoryView.
+    func advanceFromStory(_ chapter: Chapter) {
+        // POTONG JALUR DI SINI
+        if chapter == .zolkiew {
+            changeState(to: .cutscene(.zolkiew)) // Langsung masuk dialog visual, gak pake gameplay lokomotif!
+        } else {
+            changeState(to: .playing(chapter)) // Chapter lain tetep masuk gameplay normal
+        }
+    }
+    
+    /// Called when a chapter's gameplay is successfully completed.
+    func completeChapter(_ chapter: Chapter) {
+        withAnimation(.easeInOut(duration: 1.5)) {
+            
+            switch chapter {
+                
+            case .zolkiew:
+                changeState(to: .cutscene(.zolkiew))
+                
+            default:
+                if let nextChapter = chapter.next {
+                    changeState(to: .story(nextChapter))
+                } else {
+                    changeState(to: .ending)
+                }
+            }
+        }
+    }
+    
+    /// Called from FailView when the player chooses to retry.
     func retryChapter(_ chapter: Chapter) {
         changeState(to: .story(chapter))
     }
     
-    func completeChapter(_ chapter: Chapter) {
-        withAnimation(.easeInOut(duration: 1.5)) {
-            if let nextChapter = chapter.next {
-                changeState(to: .playing(nextChapter))
-            } else {
-                changeState(to: .ending)
-            }
-        }
-    }
+    // MARK: - Coal Management
     
     func updateCoal(_ amount: Double) {
         coalPercentage = max(0.0, min(100.0, coalPercentage + amount))
@@ -123,9 +193,8 @@ final class GameDirector {
         }
     }
     
-    /// Initiates the cinematic fail sequence.
-    /// If a scene is available, it animates the fade-to-black inside the scene first,
-    /// then the scene callback dispatches changeState(.failed). Otherwise falls back directly.
+    // MARK: - Fail Sequence
+    
     private func triggerFail() {
         if let scene = activeScene {
             scene.triggerFailFade(chapter: activeChapter)

@@ -608,6 +608,7 @@ final class GameScene: SKScene {
             (track1_rail1_start, track1_rail1_end)
         ]
         
+        
         // Create rail sprites (width 6.0 to be clearly visible and textured)
         originalRailPositions.removeAll()
         for points in railsPoints {
